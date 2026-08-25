@@ -1,80 +1,17 @@
 openapi: 3.0.3
 info:
-  title: API de Rotas Visuais
+  title: API do Meu Campus 
   version: 1.0.0
-  description: Documentação da rota para criação de rotas visuais utilizando FormData.
-paths:
-  /api/visual-route:
-    post:
-      summary: Criar rota visual
-      operationId: handleCreateVisualRoute
-      description: |
-        Cria uma nova rota visual enviando metadados e imagens associadas via FormData.
+  description: Backend oficial do aplicativo {nome a definir} para acessibilidade e rotas.
 
-        **Nota sobre as imagens:** Para cada item enviado no array `steps_metadata`, deve existir um campo correspondente `step_image_i` contendo o arquivo binário da imagem, onde `i` representa o índice do step (ex: `step_image_0`, `step_image_1`).
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  description: Título da rota visual.
-                  example: 'Rota Histórica do Prédio Central'
-                building-id:
-                  type: string
-                  description: Identificador único do edifício.
-                  example: 'bldg-12345'
-                status:
-                  type: string
-                  enum:
-                    - published
-                    - hidden
-                  description: Status de visibilidade da rota.
-                  example: 'published'
-                steps_metadata:
-                  type: array
-                  description: Lista serializada em JSON contendo os metadados de cada etapa da rota.
-                  items:
-                    type: object
-                    required:
-                      - step_order
-                      - description
-                      - lon
-                      - lat
-                    properties:
-                      step_order:
-                        type: integer
-                        description: Ordem numérica do passo.
-                        example: 1
-                      description:
-                        type: string
-                        description: Descrição do que deve ser feito ou visto nesta etapa.
-                        example: 'Vire à esquerda na recepção.'
-                      lon:
-                        type: number
-                        format: float
-                        description: Longitude da coordenada geográfica.
-                        example: -46.7268
-                      lat:
-                        type: number
-                        format: float
-                        description: Latitude da coordenada geográfica.
-                        example: -23.5596
-              required:
-                - title
-                - building-id
-                - status
-                - steps_metadata
-              additionalProperties:
-                type: string
-                format: binary
-                description: Imagens dinâmicas correspondentes a cada passo (`step_image_0`, `step_image_1`, etc.).
+paths:
+  /buildings:
+    get:
+      summary: Lista todos os prédios cadastrados
+      description: Retorna uma lista contendo todos os prédios ativos e seus respectivos pontos de acessibilidade (como elevadores, rampas e banheiros PCD).
       responses:
-        '201':
-          description: Rota visual criada com sucesso.
+        '200':
+          description: Sucesso ao retornar a lista de prédios.
           content:
             application/json:
               schema:
@@ -83,8 +20,59 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  message:
-                    type: string
-                    example: 'Rota visual criada com sucesso.'
-        '400':
-          description: Dados inválidos enviados no FormData.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "bldg_001"
+                        name:
+                          type: string
+                          example: "Faculdade de Filosofia, Letras e Ciências Humanas"
+                        address:
+                          type: string
+                          example: "Rua do Lago, 717, Butantã, São Paulo - SP, 05508-080"
+                        phone:
+                          type: string
+                          example: "(11) 3091-4612"
+                        email:
+                          type: string
+                          example: "fflch@usp.br"
+                        website:
+                          type: string
+                          example: "https://www.fflch.usp.br/"
+                        acessibilityPoints:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                example: "poi_001"
+                              category:
+                                type: string
+                                example: "elevator"
+                              name:
+                                type: string
+                                example: "Elevador Principal"
+        '500':
+          description: Erro interno no servidor ou falha de comunicação com o banco D1.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: "ERR_FETCH_BUILDINGS_FAILED"
+                      message:
+                        type: string
+                        example: "Não foi possível carregar a lista de prédios."
