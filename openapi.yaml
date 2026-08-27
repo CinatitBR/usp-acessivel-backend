@@ -76,3 +76,77 @@ paths:
                       message:
                         type: string
                         example: "Não foi possível carregar a lista de prédios."
+
+  /visualRoutes:
+    post:
+      summary: Cria uma nova rota visual
+      description: Recebe os metadados da rota e efetua o upload simultâneo das imagens referentes a cada passo para o Cloudflare R2, salvando os relacionamentos no banco D1. Permite envios anônimos e rotas não atreladas a um POI específico.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - stepsMeta
+                - images
+              properties:
+                destinationPoiId:
+                  type: string
+                  nullable: true
+                  description: ID do Ponto de Interesse de destino. Pode ser omitido, vazio ou enviado como "null" para rotas genéricas.
+                  example: "poi_001"
+                originName:
+                  type: string
+                  nullable: true
+                  description: Nome do ponto de partida da rota.
+                  example: "Portaria Principal"
+                createdBy:
+                  type: string
+                  nullable: true
+                  description: ID do usuário criador. Permite nulo/vazio para submissões anônimas.
+                  example: "usr_001"
+                stepsMeta:
+                  type: string
+                  description: Array JSON em formato string contendo a ordem e a descrição de cada passo. O tamanho deste array DEVE ser estritamente idêntico à quantidade de imagens enviadas. Os campos desse json são step_order, que representa a ordem daquela imagem na sequencia da rota e description que preferencialmente contem algo como "Passe pela catraca e siga reto no corredor principal.".
+                  example: '[{"step_order": 1, "description": "Passe pela catraca e siga reto no corredor principal."}]'
+                images:
+                  type: array
+                  description: Arquivos de imagem referentes a cada passo da rota. A ordem de envio no formulário deve corresponder à ordem dos itens no stepsMeta.
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '201':
+          description: Rota visual e seus passos cadastrados com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  routeId:
+                    type: string
+                    example: "route_f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        '400':
+          description: Erro de validação nos dados enviados (ex. metadados ausentes ou divergência na quantidade de arquivos).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Inconsistência: Você enviou 2 passos mas só 1 imagens"
+        '500':
+          description: Falha no processamento da transação no D1 ou no upload para o R2 (com rollback acionado). Retorna a chave do erro para tradução no frontend.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "ERR_CREATE_VISUAL_ROUTE_FAILED"

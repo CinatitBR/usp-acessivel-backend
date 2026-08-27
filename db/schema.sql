@@ -3,9 +3,9 @@ PRAGMA foreign_keys = ON;
 -- Usuarios, modelado para aceitar tanto login da USP (quem sabe a gente consegue) quanto e-mail/senha convencional
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    auth_provider TEXT NOT NULL,
+    name TEXT,
+    email TEXT UNIQUE,
+    auth_provider TEXT,
     avatar_url TEXT,
     contribution_count INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -14,9 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
 -- Prédios 
 CREATE TABLE IF NOT EXISTS buildings (
     id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    lat REAL NOT NULL,
-    lon REAL NOT NULL,
+    name TEXT,
+    lat REAL,
+    lon REAL,
     address TEXT,
     phone TEXT,
     email TEXT,
@@ -28,9 +28,9 @@ CREATE TABLE IF NOT EXISTS pois (
     id TEXT PRIMARY KEY,
     building_id TEXT, 
     category TEXT CHECK(category in ('elevator', 'bathroom', 'ramp', 'other')),
-    name TEXT NOT NULL,
-    lat REAL NOT NULL,
-    lon REAL NOT NULL, 
+    name TEXT,
+    lat REAL,
+    lon REAL, 
     
     -- FORMATOS ESPERADOS PARA O details_json (Varia pela 'category'):
     -- elevator: {"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"} -- esse de dimensões pode ser opicional, se não as pessoas não vão mandar por não querer medir
@@ -48,24 +48,18 @@ CREATE TABLE IF NOT EXISTS pois (
 -- 4. AVALIAÇÕES DOS POIs (Mini Questionário)
 CREATE TABLE IF NOT EXISTS poi_evaluations (
     id TEXT PRIMARY KEY,
-    poi_id TEXT NOT NULL,
-    user_id TEXT NOT NULL,
-    is_pcd BOOLEAN NOT NULL,
-    had_difficulty BOOLEAN,
-    mobility_aid TEXT CHECK(mobility_aid in ('wheelchair', 'walker', 'cane', 'other', 'none')),
-    description TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (poi_id) REFERENCES pois(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    poi_id TEXT,
+    user_id TEXT,
+    is_pcd BOOLEAN
 );
 
 -- Rotas visuais, exemplo: rotas da entrada até um elevador
 CREATE TABLE IF NOT EXISTS visual_routes (
     id TEXT PRIMARY KEY,
-    destination_poi_id TEXT NOT NULL,
-    origin_name TEXT NOT NULL,
-    status TEXT NOT NULL DEFAULT 'pending_moderation' CHECK(status in ('active', 'pending_moderation', 'rejected')), 
-    created_by TEXT NOT NULL,
+    destination_poi_id TEXT,
+    origin_name TEXT,
+    status TEXT DEFAULT 'pending_moderation' CHECK(status in ('active', 'pending_moderation', 'rejected')), 
+    created_by TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (destination_poi_id) REFERENCES pois(id) ON DELETE CASCADE,
     FOREIGN KEY (created_by) REFERENCES users(id)
@@ -74,21 +68,21 @@ CREATE TABLE IF NOT EXISTS visual_routes (
 -- Tabela para ordenar as imagens das rotas internas
 CREATE TABLE IF NOT EXISTS visual_route_steps(
     id TEXT PRIMARY KEY, 
-    visual_route_id TEXT NOT NULL,
-    step_order INTEGER NOT NULL, 
+    visual_route_id TEXT,
+    step_order INTEGER, 
     description TEXT,
-    image_url TEXT NOT NULL,
+    image_url TEXT,
     FOREIGN KEY (visual_route_id) REFERENCES visual_routes(id) ON DELETE CASCADE
 );
 
 -- 6. REPORTES DO MAPA (Calçadas, Alertas Waze)
 CREATE TABLE IF NOT EXISTS map_reports (
     id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    report_type TEXT NOT NULL CHECK(report_type in ('blocked_crosswalk', 'pothole', 'broken_elevator', 'fallen_tree', 'inaccessible_entrance', 'irregular_surface', 'sidewalk_surface', 'bus_stop_curb')), 
-    geom_type TEXT NOT NULL CHECK(geom_type in ('point', 'line')),
-    lat REAL NOT NULL,
-    lon REAL NOT NULL,
+    user_id TEXT,
+    report_type TEXT CHECK(report_type in ('blocked_crosswalk', 'pothole', 'broken_elevator', 'fallen_tree', 'inaccessible_entrance', 'irregular_surface', 'sidewalk_surface', 'bus_stop_curb')), 
+    geom_type TEXT CHECK(geom_type in ('point', 'line')),
+    lat REAL,
+    lon REAL,
     geometry_json TEXT, 
     image_url TEXT,
     
@@ -99,7 +93,7 @@ CREATE TABLE IF NOT EXISTS map_reports (
     --  {"surface_type": "tactile_paving", "mobility_aid": "wheelchair", "had_difficulty": true}
     -- bus_stop_curb: 
     --   {"curb_is_adequate": false, "desc": "Guia muito alta para embarque"}
-    details_json TEXT NOT NULL, 
+    details_json TEXT, 
     
     status TEXT DEFAULT 'active' CHECK(status in ('active', 'resolved', 'pending_moderation')),
     confirmations INTEGER DEFAULT 1,
