@@ -150,3 +150,94 @@ paths:
                   error:
                     type: string
                     example: "ERR_CREATE_VISUAL_ROUTE_FAILED"
+
+  /pois:
+      post:
+        summary: "Cria um novo Ponto de Interesse (POI)"
+        description: >
+          Cadastra um novo ponto de acessibilidade (restringido a três categorias: elevador, banheiro, rampa ou outro) atrelado a um prédio ou posicionado de forma independente no mapa, validando os contratos específicos de detalhes por categoria definidos no banco.
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - buildingId
+                  - category
+                  - name
+                  - lat
+                  - lon
+                  - createdBy
+                properties:
+                  buildingId:
+                    type: string
+                    nullable: true
+                    description: "ID do prédio ao qual o POI pertence. Opcional caso o ponto fique fora de prédios."
+                    example: "bldg_001"
+                  category:
+                    type: string
+                    enum: [elevator, bathroom, ramp, other]
+                    description: "Categoria do ponto de interesse."
+                    example: "elevator"
+                  name:
+                    type: string
+                    description: "Nome descritivo do ponto de interesse."
+                    example: "Elevador Principal - Bloco A"
+                  lat:
+                    type: number
+                    format: float
+                    description: "Latitude geográfica do POI."
+                    example: -23.55961
+                  lon:
+                    type: number
+                    format: float
+                    description: "Longitude geográfica do POI."
+                    example: -46.72681
+                  detailsJson:
+                    type: string
+                    nullable: true
+                    description: |
+                      String contendo um objeto JSON com os detalhes específicos variando de acordo com a categoria:
+                      - **elevator**: `{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}`
+                      - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`
+                      - **ramp**: `{"has_handrail": true, "steepness": "moderate"}`
+                    example: '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}'
+                  createdBy:
+                    type: string
+                    description: "ID do usuário criador do registro (chave estrangeira para a tabela users)."
+                    example: "usr_001"
+        responses:
+          '201':
+            description: "Ponto de interesse criado com sucesso."
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    poiId:
+                      type: string
+                      example: "poi_f47ac10b-58cc-4372-a567-0e02b2c3d479"
+          '400':
+            description: "Erro de validação de campos obrigatórios ausentes ou categoria inválida."
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      example: "Faltam campos obrigatórios ou a categoria informada é inválida."
+          '500':
+            description: "Falha interna no servidor ou violação de restrição de integridade do banco (como chave estrangeira inválida)."
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      example: "ERR_CREATE_POI_FAILED"
