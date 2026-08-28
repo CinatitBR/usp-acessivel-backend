@@ -50,7 +50,11 @@ CREATE TABLE IF NOT EXISTS poi_evaluations (
     id TEXT PRIMARY KEY,
     poi_id TEXT,
     user_id TEXT,
-    is_pcd BOOLEAN
+    is_pcd BOOLEAN,
+    had_difficulty BOOLEAN,
+    mobility_aid TEXT,
+    description TEXT
+
 );
 
 -- Rotas visuais, exemplo: rotas da entrada até um elevador
@@ -79,8 +83,8 @@ CREATE TABLE IF NOT EXISTS visual_route_steps(
 CREATE TABLE IF NOT EXISTS map_reports (
     id TEXT PRIMARY KEY,
     user_id TEXT,
-    report_type TEXT CHECK(report_type in ('blocked_crosswalk', 'pothole', 'broken_elevator', 'fallen_tree', 'inaccessible_entrance', 'irregular_surface', 'sidewalk_surface', 'bus_stop_curb')), 
-    geom_type TEXT CHECK(geom_type in ('point', 'line')),
+    report_type TEXT CHECK(report_type in ('blocked_crosswalk', 'pothole', 'broken_elevator', 'fallen_tree', 'inaccessible_entrance', 'irregular_surface', 'sidewalk_surface', 'bus_stop_curb', 'other')), -- bus stop curb é para aquilo de se a guia do ponto de ônibus está reformada ou não
+    geom_type TEXT CHECK(geom_type in ('point', 'line')), -- caso a pessoa coloque até onde vai o piso que ela vai enviar
     lat REAL,
     lon REAL,
     geometry_json TEXT, 
@@ -93,6 +97,8 @@ CREATE TABLE IF NOT EXISTS map_reports (
     --  {"surface_type": "tactile_paving", "mobility_aid": "wheelchair", "had_difficulty": true}
     -- bus_stop_curb: 
     --   {"curb_is_adequate": false, "desc": "Guia muito alta para embarque"}
+    -- other
+    -- {"descr: Descrição}
     details_json TEXT, 
     
     status TEXT DEFAULT 'active' CHECK(status in ('active', 'resolved', 'pending_moderation')),
