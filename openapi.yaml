@@ -262,6 +262,11 @@ paths:
                   nullable: true
                   enum: [blocked_crosswalk, pothole, broken_elevator, fallen_tree, inaccessible_entrance, irregular_surface, sidewalk_surface, bus_stop_curb, other]
                   description: "Tipo de reporte ou problema."
+                poiId:
+                  type: string
+                  nullable: true
+                  description: "ID do Ponto de Interesse. Preencher caso o reporte seja sobre um POI específico (ex: elevador quebrado). Deixar vazio para problemas genéricos no mapa."
+                  example: "poi_005"
                 geomType:
                   type: string
                   nullable: true
@@ -311,6 +316,157 @@ paths:
                   error:
                     type: string
                     example: "ERR_CREATE_REPORT_FAILED"
+    get:
+      summary: "Lista reportes para navegação no mapa"
+      description: >
+        Retorna os dados dos problemas e calçadas para visualização em popups no mapa[cite: 6]. Para evitar que o sistema mostre todas as fotos de uma vez, a requisição filtra os dados conforme o usuário dá zoom em uma determinada região, usando uma Bounding Box (limites de latitude e longitude)[cite: 6]. Retorna se o mapeamento do piso é um ponto único ou uma demarcação no mapa até onde vai o piso (linha)[cite: 6].
+      parameters:
+        - in: query
+          name: minLat
+          schema:
+            type: number
+          description: "Latitude mínima da região visível na tela."
+        - in: query
+          name: maxLat
+          schema:
+            type: number
+          description: "Latitude máxima da região visível na tela."
+        - in: query
+          name: minLon
+          schema:
+            type: number
+          description: "Longitude mínima da região visível na tela."
+        - in: query
+          name: maxLon
+          schema:
+            type: number
+          description: "Longitude máxima da região visível na tela."
+      responses:
+        '200':
+          description: "Lista de reportes carregada com sucesso."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "rep_001"
+                        geomType:
+                          type: string
+                          enum: [point, line]
+                          description: "Indica se é uma foto de um ponto ou a marcação de até onde vai o piso[cite: 6]."
+                        lat:
+                          type: number
+                        lon:
+                          type: number
+                        geometryJson:
+                          type: string
+                          description: "Coordenadas da linha caso geomType seja 'line'[cite: 6]."
+                        imageUrl:
+                          type: string
+                          description: "Imagem da via ou calçada visível no popup[cite: 6]."
+        '500':
+          description: "Erro interno ao buscar dados."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "ERR_FETCH_MAP_REPORTS_FAILED"
+  /mapReports/{id}:
+    get:
+      summary: "Obtém o detalhamento de um reporte (Clique no Popup)"
+      description: >
+        Acionado quando o usuário clica em um popup de piso no mapa[cite: 6]. Retorna um maior detalhamento a respeito, exibindo o mini questionário que o próprio usuário contribuinte respondeu[cite: 6]. O detalhamento inclui informações de moderação, nome do piso no Open Street Map e validações de calçadas ou pontos de ônibus[cite: 6].
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: "ID do reporte do mapa."
+      responses:
+        '200':
+          description: "Detalhes retornados com sucesso."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      reportType:
+                        type: string
+                        example: "sidewalk_surface"
+                      osmFloorName:
+                        type: string
+                        description: "Nome do piso conforme reportado no Open Street Map[cite: 6]."
+                        example: "Piso Tátil Direcional"
+                      detailsJson:
+                        type: string
+                        description: |
+                          Respostas do mini questionário do usuário contribuinte. 
+                          - Se piso (sidewalk_surface): Respostas para as perguntas "teve dificuldade?", "qual dificuldade de locomoção (Cadeira, Andador, Bengala, Outros)?" e explicação em poucas palavras (apenas se o autor for PCD)[cite: 6].
+                          - Se ponto de ônibus (bus_stop_curb): Resposta informando se a guia é adequada[cite: 6].
+                        example: '{"had_difficulty": true, "mobility_aid": "wheelchair", "description": "Muito esburacado"}'
+                      status:
+                        type: string
+                        description: "Status do reporte (passa por moderação com pessoas reais)[cite: 6]."
+                        example: "pending_moderation"
+        '404':
+          description: "Reporte não encontrado."
+        '500':
+          description: "Erro interno no servidor."
+
+  /mapReports/{id}/rejections:
+    patch:
+      summary: "Informa que um problema não existe mais ou atualiza reporte"
+      description: >
+        Permite ao usuário informar que um problema cadastrado não existe mais, incrementando o contador de rejeições (`rejections_count`)[cite: 6]. Essa rota também é utilizada para a regra de negócio onde um usuário tenta reportar um local já mapeado e recebe a opção "já reportaram antes, deseja atualizar?"[cite: 6].
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Contador de rejeições atualizado com sucesso."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  newRejectionsCount:
+                    type: integer
+                    example: 1
+        '500':
+          description: "Falha de processamento no banco de dados."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "ERR_UPDATE_REJECTION_FAILED"
 
   /poiEvaluations:
       post:
@@ -375,3 +531,4 @@ paths:
                     error:
                       type: string
                       example: "ERR_CREATE_EVALUATION_FAILED"
+
