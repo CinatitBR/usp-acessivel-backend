@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS visual_route_steps(
 CREATE TABLE IF NOT EXISTS map_reports (
     id TEXT PRIMARY KEY,
     user_id TEXT,
+    poi_id TEXT, -- caso o report seja sobre um poi especifico, tipo elevador quebrado
     report_type TEXT CHECK(report_type in ('blocked_crosswalk', 'pothole', 'broken_elevator', 'fallen_tree', 'inaccessible_entrance', 'irregular_surface', 'sidewalk_surface', 'bus_stop_curb', 'other')), -- bus stop curb é para aquilo de se a guia do ponto de ônibus está reformada ou não
     geom_type TEXT CHECK(geom_type in ('point', 'line')), -- caso a pessoa coloque até onde vai o piso que ela vai enviar
     lat REAL,
@@ -102,8 +103,9 @@ CREATE TABLE IF NOT EXISTS map_reports (
     details_json TEXT, 
     
     status TEXT DEFAULT 'active' CHECK(status in ('active', 'resolved', 'pending_moderation')),
-    confirmations INTEGER DEFAULT 1,
+    rejections_count INTEGER DEFAULT 0, -- quantas pessoas disseram que esse problema nao existe mais, quando bater um numero x o popup some
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (poi_id) REFERENCES pois(id) ON DELETE CASCADE
 );
 
