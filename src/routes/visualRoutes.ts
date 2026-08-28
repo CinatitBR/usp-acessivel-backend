@@ -1,80 +1,72 @@
-import { Hono } from "hono";
-import { processAndCreateVisualRoute } from "../services/visualRoutes";
-import { StepMetadataInput } from "../models/visualRoutes";
+import { Hono } from 'hono';
+import { processAndCreateVisualRoute } from '../services/visualRoutes';
+import { StepMetadataInput } from '../models/visualRoutes';
 
 type Bindings = {
-    DB: D1Database
-    BUCKET: R2Bucket
+  DB: D1Database;
+  BUCKET: R2Bucket;
 };
 
-const visualRoutes = new Hono<{Bindings: Bindings}>();
+const visualRoutes = new Hono<{ Bindings: Bindings }>();
 
-visualRoutes.post('/', async (c) =>
-{
-    try {
-            const formData = await c.req.formData();
+visualRoutes.post('/', async (c) => {
+  try {
+    const formData = await c.req.formData();
 
-            // Extraindo os dados enviados
-            let destinationPoiId = formData.get('destinationPoiId') as string | null;
-            let originName = formData.get('originName') as string | null;
-            let createdBy = formData.get('createdBy') as string | null;
-            const stepsMetaString = formData.get('stepsMeta') as string;
+    // Extraindo os dados enviados
+    const title = formData.get('title') as string;
+    const buildingId = formData.get('buildingId') as string;
+    let destinationPoiId = formData.get('destinationPoiId') as string | null;
+    let originName = formData.get('originName') as string | null;
+    let createdBy = formData.get('createdBy') as string | null;
+    const stepsMetaString = formData.get('stepsMeta') as string;
 
-            if(!stepsMetaString){
-                return c.json({error: 'O campo stepsMeta é obrigatório.'}, 400);
-            }
+    if (!stepsMetaString) {
+      return c.json({ error: 'O campo stepsMeta é obrigatório.' }, 400);
+    } else if (!buildingId) {
+      return c.json({ error: 'O campo buildingId é obrigatório.' }, 400);
+    } else if (!title) {
+      return c.json({ error: 'O campo title é obrigatório.' }, 400);
+    }
 
-            const stepsMeta: StepMetadataInput[] = JSON.parse(stepsMetaString);
-            const imageFiles = formData.getAll('images') as File[];
+    const stepsMeta: StepMetadataInput[] = JSON.parse(stepsMetaString);
+    const imageFiles = formData.getAll('images') as File[];
 
-            if(stepsMeta.length != imageFiles.length){
-                return c.json({error: `Inconsistência: Você enviou ${stepsMeta.length} passos mas só ${imageFiles.length} imagens`}, 400);
-            }
+    if (stepsMeta.length != imageFiles.length) {
+      return c.json({ error: `Inconsistência: Você enviou ${stepsMeta.length} passos mas só ${imageFiles.length} imagens` }, 400);
+    }
 
-            if (destinationPoiId === '' || destinationPoiId === 'null') {
-                destinationPoiId = null;
-            }
+    if (destinationPoiId === '' || destinationPoiId === 'null') {
+      destinationPoiId = null;
+    }
 
-            if (originName === '' || originName === 'null') {
-                originName = null;
-            }
+    if (originName === '' || originName === 'null') {
+      originName = null;
+    }
 
-            if (createdBy === '' || createdBy === 'null') {
-                createdBy = null;
-            }
+    if (createdBy === '' || createdBy === 'null') {
+      createdBy = null;
+    }
 
+    // Montando o objeto para mandar para o service
+    const routeInput = { buildingId, title, destinationPoiId, originName, createdBy };
+    const routeId = await processAndCreateVisualRoute(c.env.DB, c.env.BUCKET, routeInput, stepsMeta, imageFiles);
 
+    return c.json(
+      {
+        success: true,
+        routeId: routeId,
+      },
+      201,
+    );
+  } catch (error) {
+    console.error('Erro no Controller ao criar rota:', error);
+    if (error instanceof Error) {
+      return c.json({ error: error.message }, 500);
+    }
 
-
-
-            // Montando o objeto para mandar para o service
-            const routeInput = {destinationPoiId, originName, createdBy};
-            const routeId = await processAndCreateVisualRoute(
-                c.env.DB,
-                c.env.BUCKET,
-                routeInput,
-                stepsMeta,
-                imageFiles
-                );
-
-            return c.json({
-                success: true,
-                routeId: routeId,
-
-            }, 201);
-    
-
-
-
-        }
-        catch (error){
-            console.error('Erro no Controller ao criar rota:', error);
-            if (error instanceof Error) {
-                return c.json({error: error.message}, 500);
-            }
-
-            return c.json({error: 'ERR_INTERNAL_SERVER_ERROR'}, 500)
-        }
-})
+    return c.json({ error: 'ERR_INTERNAL_SERVER_ERROR' }, 500);
+  }
+});
 
 export default visualRoutes;
