@@ -1,20 +1,30 @@
 import type { Building, AccessibilityPoint } from '../models/buildings';
+import { drizzle } from 'drizzle-orm/d1';
+import { buildings, pois } from '../db/schema';
+import { eq, asc } from 'drizzle-orm';
 
 export const getAllBuildings = async (db: D1Database): Promise<Building[]> => {
+  const d1 = drizzle(db);
   // trazemos todos os prédios do banco de dados
-  const { results: buildingsDb } = await db.prepare('SELECT * FROM buildings ORDER BY name ASC').all();
+  const buildingsDb = await d1.select().from(buildings).orderBy(asc(buildings.name));
 
   // trazemos os pontos de interesse que estão ativos (já foram aprovados pela moderação)
-  const { results: poisDb } = await db.prepare("SELECT id, building_id, category, name, status FROM pois WHERE status = 'active'").all();
+  const poisDb = await d1.select({
+    id: pois.id,
+    buildingId: pois.buildingId,
+    category: pois.category,
+    name: pois.name,
+    status: pois.status,
+  }).from(pois).where(eq(pois.status, 'active'));
 
   // transformando os dados no objeto que a tela precisa
-  const formattedBuildings: Building[] = buildingsDb.map((bldgRow: any) => {
-    const buildingPois = poisDb.filter((poi: any) => poi.building_id === bldgRow.id);
+  const formattedBuildings: Building[] = buildingsDb.map((bldgRow) => {
+    const buildingPois = poisDb.filter((poi) => poi.buildingId === bldgRow.id);
 
-    const accessibilityPoints: AccessibilityPoint[] = buildingPois.map((poi: any) => ({
+    const accessibilityPoints: AccessibilityPoint[] = buildingPois.map((poi) => ({
       id: poi.id,
-      category: poi.category,
-      name: poi.name,
+      category: poi.category || '',
+      name: poi.name || '',
     }));
 
     return {

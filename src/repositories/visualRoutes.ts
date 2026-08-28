@@ -1,4 +1,7 @@
 import { VisualRoute, VisualRouteStep, StepMetadataInput } from "../models/visualRoutes";
+import { drizzle } from 'drizzle-orm/d1';
+import { visualRoutes, visualRouteSteps } from '../db/schema';
+import { sql } from 'drizzle-orm';
 
 export const createVisualRouteRepo = async (
     db: D1Database,
@@ -6,21 +9,24 @@ export const createVisualRouteRepo = async (
     steps: VisualRouteStep[]
 
 ): Promise<void> => {
+    const d1 = drizzle(db);
 
-    const statements = [
-        db.prepare(
-            `INSERT INTO visual_routes (id, destination_poi_id, origin_name, status, created_by, created_at)
-            VALUES (?, ?, ?, 'pending_moderation', ?, datetime('now'))`
-        ).bind(route.id, route.destination_poi_id, route.origin_name, route.created_by)
-    ];
-
-    for (const step of steps) {
-        statements.push(
-            db.prepare(
-                `INSERT INTO visual_route_steps(id, visual_route_id, step_order, description, image_url)
-                VALUES (?, ?, ?, ?, ?)`
-            ).bind(step.id, step.visual_route_id, step.step_order, step.description, step.image_url)
-        );
-    }
-    await db.batch(statements);
+    await d1.batch([
+        d1.insert(visualRoutes).values({
+            id: route.id,
+            destinationPoiId: route.destination_poi_id,
+            originName: route.origin_name,
+            status: 'pending_moderation',
+            createdBy: route.created_by,
+        }),
+        ...steps.map(step =>
+            d1.insert(visualRouteSteps).values({
+                id: step.id,
+                visualRouteId: step.visual_route_id,
+                stepOrder: step.step_order,
+                description: step.description,
+                imageUrl: step.image_url,
+            })
+        )
+    ]);
 };
