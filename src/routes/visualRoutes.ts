@@ -6,6 +6,7 @@ type Bindings = {
   DB: D1Database;
   BUCKET: R2Bucket;
 };
+const allowedMimeTypes = ['image/jpeg', 'image/webp'];
 
 const visualRoutes = new Hono<{ Bindings: Bindings }>();
 
@@ -33,7 +34,14 @@ visualRoutes.post('/', async (c) => {
     const imageFiles = formData.getAll('images') as File[];
 
     if (stepsMeta.length != imageFiles.length) {
-      return c.json({ error: `Inconsistência: Você enviou ${stepsMeta.length} passos mas só ${imageFiles.length} imagens` }, 400);
+      return c.json({ error: `Inconsistência: Você enviou ${stepsMeta.length} passos, mas há ${imageFiles.length} imagens` }, 400);
+    }
+
+    // Checa se imagens são do tipo permitido
+    for (const img of imageFiles) {
+      if (!allowedMimeTypes.includes(img.type)) {
+        return c.json({ error: 'Uma ou mais imagens não são do tipo permitido: jpeg ou webp.' }, 400);
+      }
     }
 
     if (destinationPoiId === '' || destinationPoiId === 'null') {

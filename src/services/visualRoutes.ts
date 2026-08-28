@@ -12,7 +12,7 @@ export const processAndCreateVisualRoute = async (
 ): Promise<string> => {
   // Lista das imagens que já subiram, caso precise desfazer
   const uploadedKeys: string[] = [];
-  const routeId = `route_${crypto.randomUUID()}`;
+  const routeId = `vr_${crypto.randomUUID()}`;
   const preparedSteps: VisualRouteStep[] = [];
 
   try {
@@ -20,10 +20,11 @@ export const processAndCreateVisualRoute = async (
     await Promise.all(
       stepsMeta.map(async (step, index): Promise<void> => {
         const file = imageFiles[index];
+        const fileExtension = file.type.split('/').pop();
         const stepId = `step_${crypto.randomUUID()}`;
 
         // Cria o nome do arquivo, conforme a arquitetura definida
-        const storageKey = `visual_routes/${routeId}_step_${step.step_order}.webp`;
+        const storageKey = `visual_routes/${routeId}_step_${step.step_order}.${fileExtension}`;
 
         const buffer = await file.arrayBuffer();
 
