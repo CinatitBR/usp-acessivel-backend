@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: API do Meu Campus 
+  title: API do Meu Campus
   version: 1.0.0
   description: Backend oficial do aplicativo {nome a definir} para acessibilidade e rotas.
 
@@ -27,22 +27,22 @@ paths:
                       properties:
                         id:
                           type: string
-                          example: "bldg_001"
+                          example: 'bldg_001'
                         name:
                           type: string
-                          example: "Faculdade de Filosofia, Letras e Ciências Humanas"
+                          example: 'Faculdade de Filosofia, Letras e Ciências Humanas'
                         address:
                           type: string
-                          example: "Rua do Lago, 717, Butantã, São Paulo - SP, 05508-080"
+                          example: 'Rua do Lago, 717, Butantã, São Paulo - SP, 05508-080'
                         phone:
                           type: string
-                          example: "(11) 3091-4612"
+                          example: '(11) 3091-4612'
                         email:
                           type: string
-                          example: "fflch@usp.br"
+                          example: 'fflch@usp.br'
                         website:
                           type: string
-                          example: "https://www.fflch.usp.br/"
+                          example: 'https://www.fflch.usp.br/'
                         acessibilityPoints:
                           type: array
                           items:
@@ -50,13 +50,13 @@ paths:
                             properties:
                               id:
                                 type: string
-                                example: "poi_001"
+                                example: 'poi_001'
                               category:
                                 type: string
-                                example: "elevator"
+                                example: 'elevator'
                               name:
                                 type: string
-                                example: "Elevador Principal"
+                                example: 'Elevador Principal'
         '500':
           description: Erro interno no servidor ou falha de comunicação com o banco D1.
           content:
@@ -72,10 +72,10 @@ paths:
                     properties:
                       code:
                         type: string
-                        example: "ERR_FETCH_BUILDINGS_FAILED"
+                        example: 'ERR_FETCH_BUILDINGS_FAILED'
                       message:
                         type: string
-                        example: "Não foi possível carregar a lista de prédios."
+                        example: 'Não foi possível carregar a lista de prédios.'
 
   /visualRoutes:
     post:
@@ -88,24 +88,17 @@ paths:
             schema:
               type: object
               required:
+                - title
+                - buildingId
                 - stepsMeta
                 - images
               properties:
-                destinationPoiId:
+                title:
                   type: string
-                  nullable: true
-                  description: ID do Ponto de Interesse de destino. Pode ser omitido, vazio ou enviado como "null" para rotas genéricas.
-                  example: "poi_001"
-                originName:
+                  description: Título da rota visual.
+                buildingId:
                   type: string
-                  nullable: true
-                  description: Nome do ponto de partida da rota.
-                  example: "Portaria Principal"
-                createdBy:
-                  type: string
-                  nullable: true
-                  description: ID do usuário criador. Permite nulo/vazio para submissões anônimas.
-                  example: "usr_001"
+                  description: Prédio associado à rota visual.
                 stepsMeta:
                   type: string
                   description: Array JSON em formato string contendo a ordem e a descrição de cada passo. O tamanho deste array DEVE ser estritamente idêntico à quantidade de imagens enviadas. Os campos desse json são step_order, que representa a ordem daquela imagem na sequencia da rota e description que preferencialmente contem algo como "Passe pela catraca e siga reto no corredor principal.".
@@ -116,6 +109,21 @@ paths:
                   items:
                     type: string
                     format: binary
+                destinationPoiId:
+                  type: string
+                  nullable: true
+                  description: ID do Ponto de Interesse de destino. Pode ser omitido, vazio ou enviado como "null" para rotas genéricas.
+                  example: 'poi_001'
+                originName:
+                  type: string
+                  nullable: true
+                  description: Nome do ponto de partida da rota.
+                  example: 'Portaria Principal'
+                createdBy:
+                  type: string
+                  nullable: true
+                  description: ID do usuário criador. Permite nulo/vazio para submissões anônimas.
+                  example: 'usr_001'
       responses:
         '201':
           description: Rota visual e seus passos cadastrados com sucesso.
@@ -129,7 +137,7 @@ paths:
                     example: true
                   routeId:
                     type: string
-                    example: "route_f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                    example: 'route_f47ac10b-58cc-4372-a567-0e02b2c3d479'
         '400':
           description: Erro de validação nos dados enviados (ex. metadados ausentes ou divergência na quantidade de arquivos).
           content:
@@ -139,7 +147,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Inconsistência: Você enviou 2 passos mas só 1 imagens"
+                    example: 'Inconsistência: Você enviou 2 passos mas só 1 imagens'
         '500':
           description: Falha no processamento da transação no D1 ou no upload para o R2 (com rollback acionado). Retorna a chave do erro para tradução no frontend.
           content:
@@ -149,101 +157,101 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "ERR_CREATE_VISUAL_ROUTE_FAILED"
+                    example: 'ERR_CREATE_VISUAL_ROUTE_FAILED'
 
   /pois:
-      post:
-        summary: "Cria um novo Ponto de Interesse (POI)"
-        description: >
-          Cadastra um novo ponto de acessibilidade (restringido a três categorias: elevador, banheiro, rampa ou outro) atrelado a um prédio ou posicionado de forma independente no mapa, validando os contratos específicos de detalhes por categoria definidos no banco.
-        requestBody:
-          required: true
+    post:
+      summary: 'Cria um novo Ponto de Interesse (POI)'
+      description: >
+        Cadastra um novo ponto de acessibilidade (restringido a três categorias: elevador, banheiro, rampa ou outro) atrelado a um prédio ou posicionado de forma independente no mapa, validando os contratos específicos de detalhes por categoria definidos no banco.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - buildingId
+                - category
+                - name
+                - lat
+                - lon
+                - createdBy
+              properties:
+                buildingId:
+                  type: string
+                  nullable: true
+                  description: 'ID do prédio ao qual o POI pertence. Opcional caso o ponto fique fora de prédios.'
+                  example: 'bldg_001'
+                category:
+                  type: string
+                  enum: [elevator, bathroom, ramp, other]
+                  description: 'Categoria do ponto de interesse.'
+                  example: 'elevator'
+                name:
+                  type: string
+                  description: 'Nome descritivo do ponto de interesse.'
+                  example: 'Elevador Principal - Bloco A'
+                lat:
+                  type: number
+                  format: float
+                  description: 'Latitude geográfica do POI.'
+                  example: -23.55961
+                lon:
+                  type: number
+                  format: float
+                  description: 'Longitude geográfica do POI.'
+                  example: -46.72681
+                detailsJson:
+                  type: string
+                  nullable: true
+                  description: |
+                    String contendo um objeto JSON com os detalhes específicos variando de acordo com a categoria:
+                    - **elevator**: `{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}`
+                    - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`
+                    - **ramp**: `{"has_handrail": true, "steepness": "moderate"}`
+                  example: '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}'
+                createdBy:
+                  type: string
+                  description: 'ID do usuário criador do registro (chave estrangeira para a tabela users).'
+                  example: 'usr_001'
+      responses:
+        '201':
+          description: 'Ponto de interesse criado com sucesso.'
           content:
             application/json:
               schema:
                 type: object
-                required:
-                  - buildingId
-                  - category
-                  - name
-                  - lat
-                  - lon
-                  - createdBy
                 properties:
-                  buildingId:
+                  success:
+                    type: boolean
+                    example: true
+                  poiId:
                     type: string
-                    nullable: true
-                    description: "ID do prédio ao qual o POI pertence. Opcional caso o ponto fique fora de prédios."
-                    example: "bldg_001"
-                  category:
+                    example: 'poi_f47ac10b-58cc-4372-a567-0e02b2c3d479'
+        '400':
+          description: 'Erro de validação de campos obrigatórios ausentes ou categoria inválida.'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
                     type: string
-                    enum: [elevator, bathroom, ramp, other]
-                    description: "Categoria do ponto de interesse."
-                    example: "elevator"
-                  name:
+                    example: 'Faltam campos obrigatórios ou a categoria informada é inválida.'
+        '500':
+          description: 'Falha interna no servidor ou violação de restrição de integridade do banco (como chave estrangeira inválida).'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
                     type: string
-                    description: "Nome descritivo do ponto de interesse."
-                    example: "Elevador Principal - Bloco A"
-                  lat:
-                    type: number
-                    format: float
-                    description: "Latitude geográfica do POI."
-                    example: -23.55961
-                  lon:
-                    type: number
-                    format: float
-                    description: "Longitude geográfica do POI."
-                    example: -46.72681
-                  detailsJson:
-                    type: string
-                    nullable: true
-                    description: |
-                      String contendo um objeto JSON com os detalhes específicos variando de acordo com a categoria:
-                      - **elevator**: `{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}`
-                      - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`
-                      - **ramp**: `{"has_handrail": true, "steepness": "moderate"}`
-                    example: '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}'
-                  createdBy:
-                    type: string
-                    description: "ID do usuário criador do registro (chave estrangeira para a tabela users)."
-                    example: "usr_001"
-        responses:
-          '201':
-            description: "Ponto de interesse criado com sucesso."
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    success:
-                      type: boolean
-                      example: true
-                    poiId:
-                      type: string
-                      example: "poi_f47ac10b-58cc-4372-a567-0e02b2c3d479"
-          '400':
-            description: "Erro de validação de campos obrigatórios ausentes ou categoria inválida."
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                      example: "Faltam campos obrigatórios ou a categoria informada é inválida."
-          '500':
-            description: "Falha interna no servidor ou violação de restrição de integridade do banco (como chave estrangeira inválida)."
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                      example: "ERR_CREATE_POI_FAILED"
+                    example: 'ERR_CREATE_POI_FAILED'
   /mapReports:
     post:
-      summary: "Reporta problemas ou avalia vias no mapa"
+      summary: 'Reporta problemas ou avalia vias no mapa'
       description: >
         Cria um reporte de mapa que pode ser um ponto específico ou uma linha geométrica. Todos os campos foram marcados como opcionais para contornar bloqueios de integração. O request é em formData.
       requestBody:
@@ -255,18 +263,29 @@ paths:
                 userId:
                   type: string
                   nullable: true
-                  description: "ID do usuário (autenticado via USP ou e-mail padrão)."
-                  example: "usr_001"
+                  description: 'ID do usuário (autenticado via USP ou e-mail padrão).'
+                  example: 'usr_001'
                 reportType:
                   type: string
                   nullable: true
-                  enum: [blocked_crosswalk, pothole, broken_elevator, fallen_tree, inaccessible_entrance, irregular_surface, sidewalk_surface, bus_stop_curb, other]
-                  description: "Tipo de reporte ou problema."
+                  enum:
+                    [
+                      blocked_crosswalk,
+                      pothole,
+                      broken_elevator,
+                      fallen_tree,
+                      inaccessible_entrance,
+                      irregular_surface,
+                      sidewalk_surface,
+                      bus_stop_curb,
+                      other,
+                    ]
+                  description: 'Tipo de reporte ou problema.'
                 geomType:
                   type: string
                   nullable: true
                   enum: [point, line]
-                  description: "Define se o reporte é um ponto único ou uma extensão demarcada no mapa."
+                  description: 'Define se o reporte é um ponto único ou uma extensão demarcada no mapa.'
                 lat:
                   type: number
                   format: float
@@ -282,15 +301,15 @@ paths:
                 detailsJson:
                   type: string
                   nullable: true
-                  description: "Detalhes em formato JSON variando conforme o reportType."
+                  description: 'Detalhes em formato JSON variando conforme o reportType.'
                 image:
                   type: string
                   format: binary
                   nullable: true
-                  description: "Foto tirada pelo usuário evidenciando o problema ou calçada."
+                  description: 'Foto tirada pelo usuário evidenciando o problema ou calçada.'
       responses:
         '201':
-          description: "Reporte criado com sucesso."
+          description: 'Reporte criado com sucesso.'
           content:
             application/json:
               schema:
@@ -302,7 +321,7 @@ paths:
                   reportId:
                     type: string
         '500':
-          description: "Falha de processamento no banco de dados."
+          description: 'Falha de processamento no banco de dados.'
           content:
             application/json:
               schema:
@@ -310,68 +329,68 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "ERR_CREATE_REPORT_FAILED"
+                    example: 'ERR_CREATE_REPORT_FAILED'
 
   /poiEvaluations:
-      post:
-        summary: "Envia avaliação e mini questionário de um POI"
-        description: >
-          Registra o feedback de acessibilidade de um usuário para um POI específico. Nenhuma validação rigorosa de campos exigida no contrato[cite: 5].
-        requestBody:
+    post:
+      summary: 'Envia avaliação e mini questionário de um POI'
+      description: >
+        Registra o feedback de acessibilidade de um usuário para um POI específico. Nenhuma validação rigorosa de campos exigida no contrato[cite: 5].
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                poiId:
+                  type: string
+                  nullable: true
+                  description: 'ID do Ponto de Interesse avaliado[cite: 6].'
+                  example: 'poi_001'
+                userId:
+                  type: string
+                  nullable: true
+                  description: 'ID do usuário respondente[cite: 6].'
+                  example: 'usr_002'
+                isPcd:
+                  type: boolean
+                  nullable: true
+                  description: 'Filtro inicial: O usuário é PCD? Se falso, as perguntas abaixo podem ser ignoradas pelo frontend[cite: 5, 6].'
+                  example: true
+                hadDifficulty:
+                  type: boolean
+                  nullable: true
+                  description: '1) Você teve dificuldade com esse ponto de interesse?[cite: 5]'
+                  example: false
+                mobilityAid:
+                  type: string
+                  nullable: true
+                  enum: [wheelchair, walker, cane, other]
+                  description: '2) Qual sua dificuldade de locomoção? (Cadeira, Andador, Bengala, Outros)[cite: 5]'
+                  example: 'wheelchair'
+                description:
+                  type: string
+                  nullable: true
+                  description: '3) Descreva em poucas palavras sua dificuldade[cite: 5].'
+                  example: 'A rampa é muito íngreme.'
+      responses:
+        '201':
+          description: 'Avaliação salva com sucesso.'
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  poiId:
-                    type: string
-                    nullable: true
-                    description: "ID do Ponto de Interesse avaliado[cite: 6]."
-                    example: "poi_001"
-                  userId:
-                    type: string
-                    nullable: true
-                    description: "ID do usuário respondente[cite: 6]."
-                    example: "usr_002"
-                  isPcd:
+                  success:
                     type: boolean
-                    nullable: true
-                    description: "Filtro inicial: O usuário é PCD? Se falso, as perguntas abaixo podem ser ignoradas pelo frontend[cite: 5, 6]."
                     example: true
-                  hadDifficulty:
-                    type: boolean
-                    nullable: true
-                    description: "1) Você teve dificuldade com esse ponto de interesse?[cite: 5]"
-                    example: false
-                  mobilityAid:
+        '500':
+          description: 'Erro interno (ex: chave estrangeira inválida).'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
                     type: string
-                    nullable: true
-                    enum: [wheelchair, walker, cane, other]
-                    description: "2) Qual sua dificuldade de locomoção? (Cadeira, Andador, Bengala, Outros)[cite: 5]"
-                    example: "wheelchair"
-                  description:
-                    type: string
-                    nullable: true
-                    description: "3) Descreva em poucas palavras sua dificuldade[cite: 5]."
-                    example: "A rampa é muito íngreme."
-        responses:
-          '201':
-            description: "Avaliação salva com sucesso."
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    success:
-                      type: boolean
-                      example: true
-          '500':
-            description: "Erro interno (ex: chave estrangeira inválida)."
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    error:
-                      type: string
-                      example: "ERR_CREATE_EVALUATION_FAILED"
+                    example: 'ERR_CREATE_EVALUATION_FAILED'

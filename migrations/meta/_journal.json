@@ -15,6 +15,13 @@
       "when": 1787936731072,
       "tag": "0001_aberrant_randall_flagg",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787942725432,
+      "tag": "0002_windy_jackpot",
+      "breakpoints": true
     }
   ]
 }

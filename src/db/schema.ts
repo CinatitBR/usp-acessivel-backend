@@ -47,7 +47,9 @@ export const poiEvaluations = sqliteTable('poi_evaluations', {
 
 export const visualRoutes = sqliteTable('visual_routes', {
   id: text('id').primaryKey(),
-  buildingId: text('building_id').notNull(),
+  buildingId: text('building_id')
+    .references(() => buildings.id)
+    .notNull(),
   title: text('title').notNull(),
   destinationPoiId: text('destination_poi_id').references(() => pois.id, { onDelete: 'cascade' }),
   originName: text('origin_name'),
@@ -64,7 +66,7 @@ export const visualRouteSteps = sqliteTable('visual_route_steps', {
   stepOrder: integer('step_order').notNull(),
   description: text('description'),
   imageUrl: text('image_url').notNull(),
-  // Representa a localização desse passo no mapa (onde a imagem foi tirada).
+  // Representa a localização desse passo no mapa: o lugar onde a imagem foi tirada.
   // Idealmente, essa informação é extraída automaticamente dos metadados da imagem.
   lat: real('lat'),
   lon: real('lon'),
