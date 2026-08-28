@@ -241,3 +241,137 @@ paths:
                     error:
                       type: string
                       example: "ERR_CREATE_POI_FAILED"
+  /mapReports:
+    post:
+      summary: "Reporta problemas ou avalia vias no mapa"
+      description: >
+        Cria um reporte de mapa que pode ser um ponto específico ou uma linha geométrica. Todos os campos foram marcados como opcionais para contornar bloqueios de integração. O request é em formData.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  nullable: true
+                  description: "ID do usuário (autenticado via USP ou e-mail padrão)."
+                  example: "usr_001"
+                reportType:
+                  type: string
+                  nullable: true
+                  enum: [blocked_crosswalk, pothole, broken_elevator, fallen_tree, inaccessible_entrance, irregular_surface, sidewalk_surface, bus_stop_curb, other]
+                  description: "Tipo de reporte ou problema."
+                geomType:
+                  type: string
+                  nullable: true
+                  enum: [point, line]
+                  description: "Define se o reporte é um ponto único ou uma extensão demarcada no mapa."
+                lat:
+                  type: number
+                  format: float
+                  nullable: true
+                lon:
+                  type: number
+                  format: float
+                  nullable: true
+                geometryJson:
+                  type: string
+                  nullable: true
+                  description: "Coordenadas adicionais se geomType for 'line'."
+                detailsJson:
+                  type: string
+                  nullable: true
+                  description: "Detalhes em formato JSON variando conforme o reportType."
+                image:
+                  type: string
+                  format: binary
+                  nullable: true
+                  description: "Foto tirada pelo usuário evidenciando o problema ou calçada."
+      responses:
+        '201':
+          description: "Reporte criado com sucesso."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  reportId:
+                    type: string
+        '500':
+          description: "Falha de processamento no banco de dados."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "ERR_CREATE_REPORT_FAILED"
+
+  /poiEvaluations:
+      post:
+        summary: "Envia avaliação e mini questionário de um POI"
+        description: >
+          Registra o feedback de acessibilidade de um usuário para um POI específico. Nenhuma validação rigorosa de campos exigida no contrato[cite: 5].
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  poiId:
+                    type: string
+                    nullable: true
+                    description: "ID do Ponto de Interesse avaliado[cite: 6]."
+                    example: "poi_001"
+                  userId:
+                    type: string
+                    nullable: true
+                    description: "ID do usuário respondente[cite: 6]."
+                    example: "usr_002"
+                  isPcd:
+                    type: boolean
+                    nullable: true
+                    description: "Filtro inicial: O usuário é PCD? Se falso, as perguntas abaixo podem ser ignoradas pelo frontend[cite: 5, 6]."
+                    example: true
+                  hadDifficulty:
+                    type: boolean
+                    nullable: true
+                    description: "1) Você teve dificuldade com esse ponto de interesse?[cite: 5]"
+                    example: false
+                  mobilityAid:
+                    type: string
+                    nullable: true
+                    enum: [wheelchair, walker, cane, other]
+                    description: "2) Qual sua dificuldade de locomoção? (Cadeira, Andador, Bengala, Outros)[cite: 5]"
+                    example: "wheelchair"
+                  description:
+                    type: string
+                    nullable: true
+                    description: "3) Descreva em poucas palavras sua dificuldade[cite: 5]."
+                    example: "A rampa é muito íngreme."
+        responses:
+          '201':
+            description: "Avaliação salva com sucesso."
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+          '500':
+            description: "Erro interno (ex: chave estrangeira inválida)."
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      example: "ERR_CREATE_EVALUATION_FAILED"
