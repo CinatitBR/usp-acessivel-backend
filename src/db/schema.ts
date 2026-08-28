@@ -37,9 +37,12 @@ export const pois = sqliteTable('pois', {
 
 export const poiEvaluations = sqliteTable('poi_evaluations', {
   id: text('id').primaryKey(),
-  poiId: text('poi_id'), // We could add references, but keeping close to schema.sql
+  poiId: text('poi_id'),
   userId: text('user_id'),
-  isPcd: integer('is_pcd', { mode: 'boolean' }), // sqlite uses integer for boolean
+  isPcd: integer('is_pcd', { mode: 'boolean' }),
+  hadDifficulty: integer('had_difficulty', { mode: 'boolean' }),
+  mobilityAid: text('mobility_aid'),
+  description: text('description'),
 });
 
 export const visualRoutes = sqliteTable('visual_routes', {
@@ -62,7 +65,20 @@ export const visualRouteSteps = sqliteTable('visual_route_steps', {
 export const mapReports = sqliteTable('map_reports', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id),
-  reportType: text('report_type', { enum: ['blocked_crosswalk', 'pothole', 'broken_elevator', 'fallen_tree', 'inaccessible_entrance', 'irregular_surface', 'sidewalk_surface', 'bus_stop_curb'] }),
+  poiId: text('poi_id').references(() => pois.id, { onDelete: 'cascade' }),
+  reportType: text('report_type', {
+    enum: [
+      'blocked_crosswalk',
+      'pothole',
+      'broken_elevator',
+      'fallen_tree',
+      'inaccessible_entrance',
+      'irregular_surface',
+      'sidewalk_surface',
+      'bus_stop_curb',
+      'other',
+    ],
+  }),
   geomType: text('geom_type', { enum: ['point', 'line'] }),
   lat: real('lat'),
   lon: real('lon'),
@@ -70,6 +86,6 @@ export const mapReports = sqliteTable('map_reports', {
   imageUrl: text('image_url'),
   detailsJson: text('details_json'),
   status: text('status', { enum: ['active', 'resolved', 'pending_moderation'] }).default('active'),
-  confirmations: integer('confirmations').default(1),
+  rejectionsCount: integer('rejections_count').default(0),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
