@@ -77,6 +77,149 @@ paths:
                         type: string
                         example: 'Não foi possível carregar a lista de prédios.'
 
+  /buildings/{id}/accessibility:
+      get:
+        summary: Retorna os dados completos de acessibilidade de um prédio.
+        description: |
+          Busca os detalhes de acessibilidade do prédio pelo seu ID. 
+          A lógica interna consulta o banco D1 buscando o registro base do prédio. 
+          Em seguida, paraleliza a extração dos Pontos de Interesse (POIs) e das Rotas Visuais associadas a ele. 
+          Por fim, captura todos os passos das rotas, agrupa-os na memória associando-os aos IDs das rotas (`routeId`), e os ordena ascendentemente pela coluna `stepOrder` antes de devolver o objeto estruturado e limpo para o front-end.
+        parameters:
+          - in: path
+            name: id
+            required: true
+            schema:
+              type: string
+            description: ID único do prédio no banco de dados.
+        responses:
+          '200':
+            description: Requisição processada com sucesso. Retorna a árvore do prédio com POIs e rotas.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: true
+                    data:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "ime"
+                        name:
+                          type: string
+                          example: "Instituto de Matemática e Estatística (IME)"
+                        pois:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              category:
+                                type: string
+                              name:
+                                type: string
+                              detailsJson:
+                                type: string
+                                nullable: true
+                              createdAt:
+                                type: string
+                        visualRoutes:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              title:
+                                type: string
+                              destinationPoiId:
+                                type: string
+                              originName:
+                                type: string
+                              createdAt:
+                                type: string
+                              steps:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    stepOrder:
+                                      type: integer
+                                    description:
+                                      type: string
+                                      nullable: true
+                                    imageUrl:
+                                      type: string
+                                    lat:
+                                      type: number
+                                      format: float
+                                      nullable: true
+                                    lon:
+                                      type: number
+                                      format: float
+                                      nullable: true
+          '400':
+            description: Erro de validação. O parâmetro ID na URL está vazio ou ausente.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: false
+                    error:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          example: "ERR_MISSING_BUILDING_ID"
+                        message:
+                          type: string
+                          example: "O ID do prédio é obrigatório na URL."
+          '404':
+            description: Prédio não localizado no banco de dados D1.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: false
+                    error:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          example: "ERR_BUILDING_NOT_FOUND"
+                        message:
+                          type: string
+                          example: "Predio nao encontrado"
+          '500':
+            description: Falha crítica na conexão com o banco ou exceção não tratada no Worker.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                      example: false
+                    error:
+                      type: object
+                      properties:
+                        code:
+                          type: string
+                          example: "ERR_FETCH_ACCESSIBILITY_FAILED"
+                        message:
+                          type: string
+                          example: "Erro interno ao processar a requisição."
   /visualRoutes:
     post:
       summary: Cria uma nova rota visual
@@ -335,7 +478,7 @@ paths:
     post:
       summary: 'Envia avaliação e mini questionário de um POI'
       description: >
-        Registra o feedback de acessibilidade de um usuário para um POI específico. Nenhuma validação rigorosa de campos exigida no contrato[cite: 5].
+        Registra o feedback de acessibilidade de um usuário para um POI específico. Nenhuma validação rigorosa de campos exigida no contrato.
       requestBody:
         content:
           application/json:
@@ -345,33 +488,33 @@ paths:
                 poiId:
                   type: string
                   nullable: true
-                  description: 'ID do Ponto de Interesse avaliado[cite: 6].'
+                  description: 'ID do Ponto de Interesse avaliado.'
                   example: 'poi_001'
                 userId:
                   type: string
                   nullable: true
-                  description: 'ID do usuário respondente[cite: 6].'
+                  description: 'ID do usuário respondente.'
                   example: 'usr_002'
                 isPcd:
                   type: boolean
                   nullable: true
-                  description: 'Filtro inicial: O usuário é PCD? Se falso, as perguntas abaixo podem ser ignoradas pelo frontend[cite: 5, 6].'
+                  description: 'Filtro inicial: O usuário é PCD? Se falso, as perguntas abaixo podem ser ignoradas pelo frontend.'
                   example: true
                 hadDifficulty:
                   type: boolean
                   nullable: true
-                  description: '1) Você teve dificuldade com esse ponto de interesse?[cite: 5]'
+                  description: '1) Você teve dificuldade com esse ponto de interesse?'
                   example: false
                 mobilityAid:
                   type: string
                   nullable: true
                   enum: [wheelchair, walker, cane, other]
-                  description: '2) Qual sua dificuldade de locomoção? (Cadeira, Andador, Bengala, Outros)[cite: 5]'
+                  description: '2) Qual sua dificuldade de locomoção? (Cadeira, Andador, Bengala, Outros)'
                   example: 'wheelchair'
                 description:
                   type: string
                   nullable: true
-                  description: '3) Descreva em poucas palavras sua dificuldade[cite: 5].'
+                  description: '3) Descreva em poucas palavras sua dificuldade.'
                   example: 'A rampa é muito íngreme.'
       responses:
         '201':

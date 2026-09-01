@@ -1,8 +1,17 @@
+import { VisualRoutesWithSteps } from "./visualRoutes";
+
+
+
 // Modelo auxiliar para exibir os pontos de interesse de um prédio na tela que lista os institutos da USP
 export interface AccessibilityPoint {
-  id: string;
-  category: string; // ex: 'elevator', 'bathroom', 'ramp'
-  name: string; // ex: "Elevadores", "Banheiro PCD", é o que está exibido na tela
+  id: string | null;
+  category: string | null; // ex: 'elevator', 'bathroom', 'ramp'
+  name: string  | null; // ex: "Elevadores", "Banheiro PCD", é o que está exibido na tela
+}
+
+export interface DetailedAccessibilityPoint extends AccessibilityPoint{
+  detailsJson: string | null,
+  createdAt: string | null
 }
 
 export interface Building {
@@ -12,5 +21,13 @@ export interface Building {
   phone: string | null;
   email: string | null;
   website: string | null;
-  AccessibilityPoints: AccessibilityPoint[];
+  AccessibilityPoints: AccessibilityPoint[] | null;
+}
+
+export interface BuildingAccessibility {
+  id: string,
+  name: string,
+  pois: DetailedAccessibilityPoint[],
+  visualRoutes: VisualRoutesWithSteps[]
+
 }

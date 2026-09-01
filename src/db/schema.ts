@@ -30,6 +30,11 @@ export const pois = sqliteTable('pois', {
   lat: real('lat').notNull(),
   lon: real('lon').notNull(),
   detailsJson: text('details_json'),
+    //String contendo um objeto JSON com os detalhes específicos variando de acordo com a categoria:
+  // - **elevator**: `{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}`
+  // - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`
+  // - **ramp**: `{"has_handrail": true, "steepness": "moderate"}`
+// example: '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}'
   status: text('status', { enum: ['active', 'pending_moderation', 'rejected'] }).default('active'),
   createdBy: text('created_by').references(() => users.id),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
