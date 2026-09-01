@@ -220,7 +220,119 @@ paths:
                         message:
                           type: string
                           example: "Erro interno ao processar a requisição."
+  /pois:
+    get:
+      summary: Retorna todos os Pontos de Interesse (POIs) com paginação
+      description: Endpoint para recuperar todos os POIs.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Número da página (cada página retorna 40 itens).
+      responses:
+        '200':
+          description: Lista de POIs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        buildingId:
+                          type: string
+                        category:
+                          type: string
+                        name:
+                          type: string
+                        lat:
+                          type: number
+                        lon:
+                          type: number
+                        detailsJson:
+                          type: string
+                        status:
+                          type: string
+                        createdAt:
+                          type: string
+        '400':
+          description: Parâmetro de página inválido.
+        '500':
+          description: Erro interno ao buscar POIs.
+
   /visualRoutes:
+    get:
+      summary: Retorna todas as rotas visuais com os respectivos passos
+      description: Recupera as rotas visuais paginadas, incluindo detalhes dos passos de cada rota.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Número da página (cada página retorna 40 itens).
+      responses:
+        '200':
+          description: Lista de Rotas Visuais.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        buildingId:
+                          type: string
+                        title:
+                          type: string
+                        destinationPoiId:
+                          type: string
+                        originName:
+                          type: string
+                        status:
+                          type: string
+                        createdBy:
+                          type: string
+                        createdAt:
+                          type: string
+                        steps:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              stepOrder:
+                                type: integer
+                              description:
+                                type: string
+                              imageUrl:
+                                type: string
+                              lat:
+                                type: number
+                              lon:
+                                type: number
+        '400':
+          description: Parâmetro de página inválido.
+        '500':
+          description: Erro interno.
+
     post:
       summary: Cria uma nova rota visual
       description: Recebe os metadados da rota e efetua o upload simultâneo das imagens referentes a cada passo para o Cloudflare R2, salvando os relacionamentos no banco D1. Permite envios anônimos e rotas não atreladas a um POI específico.

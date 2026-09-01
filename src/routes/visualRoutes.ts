@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { processAndCreateVisualRoute } from '../services/visualRoutes';
 import { StepMetadataInput } from '../models/visualRoutes';
+import { getVisualRoutes } from '../repositories/visualRoutes';
 
 type Bindings = {
   DB: D1Database;
@@ -9,6 +10,27 @@ type Bindings = {
 const allowedMimeTypes = ['image/jpeg', 'image/webp'];
 
 const visualRoutes = new Hono<{ Bindings: Bindings }>();
+
+visualRoutes.get('/', async (c) => {
+  try {
+    const pageParam = c.req.query('page');
+    const page = pageParam ? parseInt(pageParam, 10) : 1;
+
+    if (isNaN(page) || page < 1) {
+      return c.json({ error: 'Parâmetro de página inválido' }, 400);
+    }
+
+    const limit = 40;
+    const offset = (page - 1) * limit;
+
+    const routes = await getVisualRoutes(c.env.DB, limit, offset);
+
+    return c.json({ success: true, data: routes }, 200);
+  } catch (error) {
+    console.error('Erro ao buscar Visual Routes:', error);
+    return c.json({ error: 'Erro interno ao buscar Rotas Visuais' }, 500);
+  }
+});
 
 visualRoutes.post('/', async (c) => {
   try {
