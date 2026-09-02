@@ -42,6 +42,11 @@ export const getAllBuildings = async (db: D1Database): Promise<Building[]> => {
   return formattedBuildings;
 };
 
+export const getBuildingById = async (db: D1Database, id: string) => {
+  const d1 = drizzle(db);
+  return await d1.select().from(buildings).where(eq(buildings.id, id)).get();
+};
+
 export const getBuildingAccessibilityById = async (db: D1Database, id: string): Promise<BuildingAccessibility | null> => {
   const d1 = drizzle(db);
 
