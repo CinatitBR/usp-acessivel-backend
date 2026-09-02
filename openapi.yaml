@@ -223,15 +223,20 @@ paths:
 
   /visualRoutes:
     get:
-      summary: Retorna todas as rotas visuais com os respectivos passos
-      description: Recupera as rotas visuais paginadas, incluindo detalhes dos passos de cada rota.
+      summary: Retorna rotas visuais com os respectivos passos
+      description: Recupera as rotas visuais paginadas. Se buildingId for fornecido, retorna todas as rotas visuais daquele prédio sem paginação.
       parameters:
         - in: query
           name: page
           schema:
             type: integer
             default: 1
-          description: Número da página (cada página retorna 40 itens).
+          description: Número da página (cada página retorna 40 itens). Ignorado se buildingId estiver presente.
+        - in: query
+          name: buildingId
+          schema:
+            type: string
+          description: Filtra rotas visuais por um prédio específico. Se fornecido, retorna todas as rotas do prédio.
       responses:
         '200':
           description: Lista de Rotas Visuais.
@@ -282,6 +287,8 @@ paths:
                                 type: number
         '400':
           description: Parâmetro de página inválido.
+        '404':
+          description: Prédio não encontrado (quando buildingId é fornecido).
         '500':
           description: Erro interno.
 

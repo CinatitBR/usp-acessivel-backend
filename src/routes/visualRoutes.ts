@@ -1,7 +1,8 @@
 import { Hono } from 'hono';
 import { processAndCreateVisualRoute } from '../services/visualRoutes';
 import { StepMetadataInput } from '../models/visualRoutes';
-import { getVisualRoutes } from '../repositories/visualRoutes';
+import { getVisualRoutes, getVisualRoutesByBuildingId } from '../repositories/visualRoutes';
+import { getBuildingById } from '../repositories/buildings';
 
 type Bindings = {
   DB: D1Database;
@@ -13,6 +14,17 @@ const visualRoutes = new Hono<{ Bindings: Bindings }>();
 
 visualRoutes.get('/', async (c) => {
   try {
+    const buildingId = c.req.query('buildingId');
+
+    if (buildingId) {
+      const building = await getBuildingById(c.env.DB, buildingId);
+      if (!building) {
+        return c.json({ error: 'Prédio não encontrado' }, 404);
+      }
+      const routes = await getVisualRoutesByBuildingId(c.env.DB, buildingId);
+      return c.json({ success: true, data: routes }, 200);
+    }
+
     const pageParam = c.req.query('page');
     const page = pageParam ? parseInt(pageParam, 10) : 1;
 
