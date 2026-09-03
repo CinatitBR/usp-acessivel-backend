@@ -24,7 +24,7 @@ export const processAndCreateVisualRoute = async (
         const stepId = `step_${crypto.randomUUID()}`;
 
         // Cria o nome do arquivo, conforme a arquitetura definida
-        const storageKey = `visual_routes/${routeId}_step_${step.step_order}.${fileExtension}`;
+        const storageKey = `visual_routes/${routeId}_step_${step.stepOrder}.${fileExtension}`;
 
         const buffer = await file.arrayBuffer();
 
@@ -38,10 +38,12 @@ export const processAndCreateVisualRoute = async (
 
         preparedSteps.push({
           id: stepId,
-          visual_route_id: routeId,
-          step_order: step.step_order,
+          visualRouteId: routeId,
+          stepOrder: step.stepOrder,
           description: step.description,
-          image_url: storageKey,
+          imageUrl: storageKey,
+          lat: "-23.557434", // mock temprario
+          lon: "-23.557434" // mock temporario
         });
       }),
     );
@@ -51,9 +53,9 @@ export const processAndCreateVisualRoute = async (
       id: routeId,
       buildingId: routeInput.buildingId,
       title: routeInput.title,
-      destination_poi_id: routeInput.destinationPoiId,
-      origin_name: routeInput.originName,
-      created_by: routeInput.createdBy,
+      destinationPoiId: routeInput.destinationPoiId,
+      originName: routeInput.originName,
+      createdBy: routeInput.createdBy,
     };
 
     await createVisualRouteRepo(db, visualRoute, preparedSteps);

@@ -42,6 +42,8 @@ export interface VisualRoutesWithSteps extends Omit<RouteDbModel, 'buildingId' |
 export interface StepMetadataInput {
   stepOrder: number;
   description: string;
+  lat: string,
+  lon: string
 }
 
 
