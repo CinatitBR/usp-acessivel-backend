@@ -304,9 +304,8 @@ paths:
 
   /pois:
     post:
-      summary: 'Cria um novo Ponto de Interesse (POI)'
-      description: >
-        Cadastra um novo ponto de acessibilidade (restringido a três categorias: elevador, banheiro, rampa ou outro) atrelado a um prédio ou posicionado de forma independente no mapa, validando os contratos específicos de detalhes por categoria definidos no banco.
+      summary: Cadastra um novo Ponto de Interesse (POI)
+      description: Cria um novo registro de POI e o vincula opcionalmente a um prédio existente.
       requestBody:
         required: true
         content:
@@ -314,53 +313,46 @@ paths:
             schema:
               type: object
               required:
-                - buildingId
                 - category
                 - name
                 - lat
                 - lon
-                - createdBy
+                - detailsJson
               properties:
                 buildingId:
                   type: string
                   nullable: true
-                  description: 'ID do prédio ao qual o POI pertence. Opcional caso o ponto fique fora de prédios.'
-                  example: 'bldg_001'
+                  description: ID do prédio associado (pode ser nulo caso o ponto seja isolado/externo).
                 category:
                   type: string
-                  enum: [elevator, bathroom, ramp, other]
-                  description: 'Categoria do ponto de interesse.'
-                  example: 'elevator'
+                  enum: [elevator, bathroom, ramp, bus, other]
+                  description: Categoria do ponto de interesse.
                 name:
                   type: string
-                  description: 'Nome descritivo do ponto de interesse.'
-                  example: 'Elevador Principal - Bloco A'
+                  description: Nome descritivo (ex. "Ponto de Ônibus Principal").
                 lat:
                   type: number
                   format: float
-                  description: 'Latitude geográfica do POI.'
-                  example: -23.55961
+                  description: Latitude da coordenada geográfica.
                 lon:
                   type: number
                   format: float
-                  description: 'Longitude geográfica do POI.'
-                  example: -46.72681
+                  description: Longitude da coordenada geográfica.
+                createdBy:
+                  type: string
+                  description: ID do usuário (UUID) responsável pela criação do registro.
                 detailsJson:
                   type: string
-                  nullable: true
                   description: |
-                    String contendo um objeto JSON com os detalhes específicos variando de acordo com a categoria:
+                    String formatada contendo um objeto JSON válido. As propriedades variam estritamente conforme a `category` escolhida:
+                    
                     - **elevator**: `{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}`
                     - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`
                     - **ramp**: `{"has_handrail": true, "steepness": "moderate"}`
-                  example: '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}'
-                createdBy:
-                  type: string
-                  description: 'ID do usuário criador do registro (chave estrangeira para a tabela users).'
-                  example: 'usr_001'
+                    - **bus**: `{"is_curb_adequate": true}`
       responses:
         '201':
-          description: 'Ponto de interesse criado com sucesso.'
+          description: POI criado com sucesso.
           content:
             application/json:
               schema:
@@ -369,29 +361,31 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  poiId:
-                    type: string
-                    example: 'poi_f47ac10b-58cc-4372-a567-0e02b2c3d479'
-        '400':
-          description: 'Erro de validação de campos obrigatórios ausentes ou categoria inválida.'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: 'Faltam campos obrigatórios ou a categoria informada é inválida.'
+                  data:
+                    type: object
+                    description: Retorna o objeto completo inserido no banco, incluindo ID (UUID) e status default ('active').
         '500':
-          description: 'Falha interna no servidor ou violação de restrição de integridade do banco (como chave estrangeira inválida).'
+          description: Erro interno no servidor ou falha na inserção no banco de dados (D1).
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  success:
+                    type: boolean
+                    example: false
                   error:
-                    type: string
-                    example: 'ERR_CREATE_POI_FAILED'
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Código de erro padronizado para o front-end mapear rotinas.
+                        enum: 
+                          - ERR_CREATE_POI_FAILED
+                          - ERR_UNKNOWN
+                      message:
+                        type: string
+                        example: "Falha ao cadastrar ponto de interesse:"
   /mapReports:
     post:
       summary: 'Reporta problemas ou avalia vias no mapa'
