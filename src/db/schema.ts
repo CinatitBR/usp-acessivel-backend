@@ -90,7 +90,6 @@ export const mapReports = sqliteTable('map_reports', {
       'inaccessible_entrance',
       'irregular_surface',
       'sidewalk_surface',
-      'bus_stop_curb',
       'other',
     ],
   }),
@@ -99,7 +98,7 @@ export const mapReports = sqliteTable('map_reports', {
   lon: real('lon').notNull(),
   geometryJson: text('geometry_json'),
   imageUrl: text('image_url'),
-  detailsJson: text('details_json'),
+  detailsJson: text('details_json'), // {descr: descrição do problema}
   status: text('status', { enum: ['active', 'resolved', 'pending_moderation'] }).default('active'),
   rejectionsCount: integer('rejections_count').default(0),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
