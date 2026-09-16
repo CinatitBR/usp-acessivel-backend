@@ -39,12 +39,12 @@ INSERT OR IGNORE INTO buildings (id, name, lon, lat) VALUES
 
  -- 1. Inserindo um Ponto de Acessibilidade (POI) no IME
 INSERT OR IGNORE INTO pois (id, building_id, category, name, details_json, lat, lon, created_at) VALUES 
-  ('poi_ime_1', 'ime', 'elevator', 'Elevador Principal Bloco A', '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}', -23.557434, -46.731765, CURRENT_TIMESTAMP),
-  ('poi_ime_2', 'ime', 'bathroom', 'Banheiro PCD Térreo', null, -23.557434, -46.731765, CURRENT_TIMESTAMP);
+  ('elevador_principal_bloco_a', 'ime', 'elevator', 'Elevador Principal Bloco A', '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}', -23.557434, -46.731765, CURRENT_TIMESTAMP),
+  ('banheiro_ime_terreo_1', 'ime', 'bathroom', 'Banheiro PCD Térreo', '{"has_grab_bars": true}', -23.557434, -46.731765, CURRENT_TIMESTAMP);
 
 -- 2. Inserindo uma Rota Visual no IME
 INSERT OR IGNORE INTO visual_routes (id, building_id, title, destination_poi_id, origin_name, created_at) VALUES 
-  ('rota_ime_1', 'ime', 'Entrada Principal até o Elevador', 'poi_ime_1', 'Portaria Principal', CURRENT_TIMESTAMP);
+  ('rota_ime_1', 'ime', 'Entrada Principal até o Elevador', 'elevador_principal_bloco_a', 'Portaria Principal', CURRENT_TIMESTAMP);
 
 -- 3. Inserindo os Passos da Rota (Atenção ao visual_route_id)
 INSERT OR IGNORE INTO visual_route_steps (id, visual_route_id, step_order, description, image_url, lat, lon) VALUES 
