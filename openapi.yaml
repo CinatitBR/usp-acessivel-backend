@@ -304,9 +304,8 @@ paths:
 
   /pois:
     post:
-      summary: 'Cria um novo Ponto de Interesse (POI)'
-      description: >
-        Cadastra um novo ponto de acessibilidade (restringido a três categorias: elevador, banheiro, rampa ou outro) atrelado a um prédio ou posicionado de forma independente no mapa, validando os contratos específicos de detalhes por categoria definidos no banco.
+      summary: Cadastra um novo Ponto de Interesse (POI)
+      description: Cria um novo registro de POI e o vincula opcionalmente a um prédio existente.
       requestBody:
         required: true
         content:
@@ -314,53 +313,46 @@ paths:
             schema:
               type: object
               required:
-                - buildingId
                 - category
                 - name
                 - lat
                 - lon
-                - createdBy
+                - detailsJson
               properties:
                 buildingId:
                   type: string
                   nullable: true
-                  description: 'ID do prédio ao qual o POI pertence. Opcional caso o ponto fique fora de prédios.'
-                  example: 'bldg_001'
+                  description: ID do prédio associado (pode ser nulo caso o ponto seja isolado/externo).
                 category:
                   type: string
-                  enum: [elevator, bathroom, ramp, other]
-                  description: 'Categoria do ponto de interesse.'
-                  example: 'elevator'
+                  enum: [elevator, bathroom, ramp, bus, other]
+                  description: Categoria do ponto de interesse.
                 name:
                   type: string
-                  description: 'Nome descritivo do ponto de interesse.'
-                  example: 'Elevador Principal - Bloco A'
+                  description: Nome descritivo (ex. "Ponto de Ônibus Principal").
                 lat:
                   type: number
                   format: float
-                  description: 'Latitude geográfica do POI.'
-                  example: -23.55961
+                  description: Latitude da coordenada geográfica.
                 lon:
                   type: number
                   format: float
-                  description: 'Longitude geográfica do POI.'
-                  example: -46.72681
+                  description: Longitude da coordenada geográfica.
+                createdBy:
+                  type: string
+                  description: ID do usuário (UUID) responsável pela criação do registro.
                 detailsJson:
                   type: string
-                  nullable: true
                   description: |
-                    String contendo um objeto JSON com os detalhes específicos variando de acordo com a categoria:
+                    String formatada contendo um objeto JSON válido. As propriedades variam estritamente conforme a `category` escolhida:
+                    
                     - **elevator**: `{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}`
                     - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`
                     - **ramp**: `{"has_handrail": true, "steepness": "moderate"}`
-                  example: '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}'
-                createdBy:
-                  type: string
-                  description: 'ID do usuário criador do registro (chave estrangeira para a tabela users).'
-                  example: 'usr_001'
+                    - **bus**: `{"is_curb_adequate": true}`
       responses:
         '201':
-          description: 'Ponto de interesse criado com sucesso.'
+          description: POI criado com sucesso.
           content:
             application/json:
               schema:
@@ -369,90 +361,100 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  poiId:
-                    type: string
-                    example: 'poi_f47ac10b-58cc-4372-a567-0e02b2c3d479'
-        '400':
-          description: 'Erro de validação de campos obrigatórios ausentes ou categoria inválida.'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: 'Faltam campos obrigatórios ou a categoria informada é inválida.'
+                  data:
+                    type: object
+                    description: Retorna o objeto completo inserido no banco, incluindo ID (UUID) e status default ('active').
         '500':
-          description: 'Falha interna no servidor ou violação de restrição de integridade do banco (como chave estrangeira inválida).'
+          description: Erro interno no servidor ou falha na inserção no banco de dados (D1).
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  success:
+                    type: boolean
+                    example: false
                   error:
-                    type: string
-                    example: 'ERR_CREATE_POI_FAILED'
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Código de erro padronizado para o front-end mapear rotinas.
+                        enum: 
+                          - ERR_CREATE_POI_FAILED
+                          - ERR_UNKNOWN
+                      message:
+                        type: string
+                        example: "Falha ao cadastrar ponto de interesse:"
   /mapReports:
     post:
-      summary: 'Reporta problemas ou avalia vias no mapa'
-      description: >
-        Cria um reporte de mapa que pode ser um ponto específico ou uma linha geométrica. Todos os campos foram marcados como opcionais para contornar bloqueios de integração. O request é em formData.
+      summary: Cria um novo relato no mapa (Map Report)
+      description: Envia um novo relato de problema ou obstáculo de acessibilidade. Suporta envio de arquivos de imagem (JPEG/WEBP) via multipart/form-data.
+      tags:
+        - Map Reports
       requestBody:
+        required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
+              required:
+                - reportType
+                - geomType
+                - lat
+                - lon
               properties:
                 userId:
                   type: string
+                  description: ID do usuário criando o relato (opcional até a implementação de autenticação).
                   nullable: true
-                  description: 'ID do usuário (autenticado via USP ou e-mail padrão).'
-                  example: 'usr_001'
+                poiId:
+                  type: string
+                  description: ID do Ponto de Interesse associado ao relato (opcional).
+                  nullable: true
                 reportType:
                   type: string
-                  nullable: true
+                  description: Categoria do problema relatado.
                   enum:
-                    [
-                      blocked_crosswalk,
-                      pothole,
-                      broken_elevator,
-                      fallen_tree,
-                      inaccessible_entrance,
-                      irregular_surface,
-                      sidewalk_surface,
-                      bus_stop_curb,
-                      other,
-                    ]
-                  description: 'Tipo de reporte ou problema.'
+                    - blocked_crosswalk
+                    - pothole
+                    - broken_elevator
+                    - fallen_tree
+                    - inaccessible_entrance
+                    - irregular_surface
+                    - sidewalk_surface
+                    - other
                 geomType:
                   type: string
-                  nullable: true
-                  enum: [point, line]
-                  description: 'Define se o reporte é um ponto único ou uma extensão demarcada no mapa.'
+                  description: Tipo de geometria espacial do problema, para permitir a implementação da funcionalidade do usuário enviar a imagem de um piso e dizer até onde ele vai.
+                  enum:
+                    - point
+                    - line
                 lat:
                   type: number
                   format: float
-                  nullable: true
+                  description: Latitude da ocorrência.
+                  example: -23.557434
                 lon:
                   type: number
                   format: float
-                  nullable: true
+                  description: Longitude da ocorrência.
+                  example: -46.730303
                 geometryJson:
                   type: string
+                  description: Objeto JSON em formato string com detalhes espaciais complexos (ex. coordenadas da linha).
                   nullable: true
-                  description: "Coordenadas adicionais se geomType for 'line'."
                 detailsJson:
                   type: string
+                  description: Objeto JSON em formato string com detalhes textuais adicionais do relato.
                   nullable: true
-                  description: 'Detalhes em formato JSON variando conforme o reportType.'
                 image:
                   type: string
                   format: binary
-                  nullable: true
-                  description: 'Foto tirada pelo usuário evidenciando o problema ou calçada.'
+                  description: Evidência fotográfica do relato. Apenas formatos JPEG ou WEBP são aceitos.
       responses:
         '201':
-          description: 'Reporte criado com sucesso.'
+          description: Relato criado com sucesso.
           content:
             application/json:
               schema:
@@ -461,18 +463,77 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  reportId:
-                    type: string
-        '500':
-          description: 'Falha de processamento no banco de dados.'
+                  data:
+                    type: object
+                    description: Objeto completo do relato recém-criado.
+                    properties:
+                      id:
+                        type: string
+                        example: rep_12345678-1234-1234-1234-1234567890ab
+                      userId:
+                        type: string
+                        nullable: true
+                      poiId:
+                        type: string
+                        nullable: true
+                      reportType:
+                        type: string
+                      geomType:
+                        type: string
+                      lat:
+                        type: number
+                      lon:
+                        type: number
+                      geometryJson:
+                        type: string
+                        nullable: true
+                      detailsJson:
+                        type: string
+                        nullable: true
+                      imageUrl:
+                        type: string
+                        description: Nome do arquivo gerado no Cloudflare R2.
+                        example: rep_1234.jpeg
+                        nullable: true
+        '400':
+          description: Erro de validação de entrada (ex. tipo de arquivo não permitido).
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  success:
+                    type: boolean
+                    example: false
                   error:
-                    type: string
-                    example: 'ERR_CREATE_REPORT_FAILED'
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: ERR_INVALID_FILE_TYPE
+                      message:
+                        type: string
+                        example: Formato de imagem não permitido. Use JPEG ou WEBP.
+        '500':
+          description: Erro interno do servidor ou falha no banco de dados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        description: Pode ser ERR_CREATE_REPORT_FAILED, ERR_UNKNOWN ou ERR_INTERNAL.
+                        example: ERR_CREATE_REPORT_FAILED
+                      message:
+                        type: string
+                        example: Falha ao criar map report
 
   /poiEvaluations:
     post:

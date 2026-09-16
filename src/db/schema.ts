@@ -25,7 +25,7 @@ export const buildings = sqliteTable('buildings', {
 export const pois = sqliteTable('pois', {
   id: text('id').primaryKey(),
   buildingId: text('building_id').references(() => buildings.id, { onDelete: 'cascade' }),
-  category: text('category', { enum: ['elevator', 'bathroom', 'ramp', 'other'] }),
+  category: text('category', { enum: ['elevator', 'bathroom', 'ramp', 'bus','other'] }),
   name: text('name').notNull(),
   lat: real('lat').notNull(),
   lon: real('lon').notNull(),
@@ -34,7 +34,7 @@ export const pois = sqliteTable('pois', {
   // - **elevator**: `{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}`
   // - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`
   // - **ramp**: `{"has_handrail": true, "steepness": "moderate"}`
-// example: '{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}'
+  // - **bus**: `{"is_curb_adequate": true}`
   status: text('status', { enum: ['active', 'pending_moderation', 'rejected'] }).default('active'),
   createdBy: text('created_by').references(() => users.id),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
@@ -90,7 +90,6 @@ export const mapReports = sqliteTable('map_reports', {
       'inaccessible_entrance',
       'irregular_surface',
       'sidewalk_surface',
-      'bus_stop_curb',
       'other',
     ],
   }),
@@ -99,7 +98,7 @@ export const mapReports = sqliteTable('map_reports', {
   lon: real('lon').notNull(),
   geometryJson: text('geometry_json'),
   imageUrl: text('image_url'),
-  detailsJson: text('details_json'),
+  detailsJson: text('details_json'), // {descr: descrição do problema}
   status: text('status', { enum: ['active', 'resolved', 'pending_moderation'] }).default('active'),
   rejectionsCount: integer('rejections_count').default(0),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
