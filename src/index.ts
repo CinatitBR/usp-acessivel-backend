@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import buildingsRoutes from './routes/buildings';
 import visualRoutes from "./routes/visualRoutes";
-import poisRoutes from "./routes/pois";
 
 export interface Env {
     DB: D1Database;
@@ -18,6 +17,5 @@ app.get('/', (c) => {
 
 app.route('/buildings', buildingsRoutes);
 app.route('/visualRoutes', visualRoutes);
-app.route('/pois', poisRoutes);
 
 export default app;
