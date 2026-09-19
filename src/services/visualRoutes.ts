@@ -42,8 +42,8 @@ export const processAndCreateVisualRoute = async (
           stepOrder: step.stepOrder,
           description: step.description,
           imageUrl: storageKey,
-          lat: "-23.557434", // mock temprario
-          lon: "-23.557434" // mock temporario
+          lat: '-23.557434', // mock temprario
+          lon: '-23.557434', // mock temporario
         });
       }),
     );
@@ -62,7 +62,8 @@ export const processAndCreateVisualRoute = async (
 
     return routeId;
   } catch (error) {
-    console.error('Falha ao processar Rota Visual. Iniciando Rollback no R2...', error);
+    console.error('Falha ao processar Rota Visual. Iniciando Rollback no R2...');
+    console.error(error);
     if (uploadedKeys.length > 0) {
       await Promise.allSettled(uploadedKeys.map((key) => bucket.delete(key)));
     }

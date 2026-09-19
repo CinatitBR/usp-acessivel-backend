@@ -1,6 +1,5 @@
-import { InferSelectModel } from "drizzle-orm";
-import { visualRoutes, visualRouteSteps } from "../db/schema";
-
+import { InferSelectModel } from 'drizzle-orm';
+import { visualRoutes, visualRouteSteps } from '../db/schema';
 
 // Linha da tabela visual_route
 export interface VisualRoute {
@@ -19,12 +18,12 @@ export interface VisualRouteStep {
   stepOrder: number;
   description: string;
   imageUrl: string;
-  lat: string | null,
-  lon: string | null
+  lat: string | null;
+  lon: string | null;
 }
 
 // Objeto resposta da rota get buildings/id/accessibility
-export interface VisualRouteStepResponse{
+export interface VisualRouteStepResponse {
   stepOrder: number;
   description: string | null;
   imageUrl: string;
@@ -32,18 +31,16 @@ export interface VisualRouteStepResponse{
   lon: number | null;
 }
 
-type RouteDbModel = InferSelectModel<typeof visualRoutes>
+type RouteDbModel = InferSelectModel<typeof visualRoutes>;
 
-export interface VisualRoutesWithSteps extends Omit<RouteDbModel, 'buildingId' | 'createdBy' | 'status'>{
-  steps: VisualRouteStepResponse[]
+export interface VisualRoutesWithSteps extends Omit<RouteDbModel, 'buildingId' | 'createdBy' | 'status'> {
+  steps: VisualRouteStepResponse[];
 }
 
 // mensagem enviada pelo front para a rota post visual routes
 export interface StepMetadataInput {
   stepOrder: number;
   description: string;
-  lat: string,
-  lon: string
+  lat: string;
+  lon: string;
 }
-
-
