@@ -1,6 +1,6 @@
 import { postMapReportRequest } from "../models/mapReports"
 import { postMapReport } from "../models/mapReports"
-import { postMapReportRepo } from "../repositories/mapReports"
+import { postMapReportRepo, getMapReportsRepo } from "../repositories/mapReports"
 
 
 export const postMapReportService = async (db: D1Database, bucket: R2Bucket, request: postMapReportRequest) => {
@@ -47,3 +47,12 @@ export const postMapReportService = async (db: D1Database, bucket: R2Bucket, req
         throw new Error('ERR_CREATE_REPORT_FAILED');
     }
 }
+
+export const getMapReportsService = async (db: D1Database, minLat: number, maxLat: number, minLon: number, maxLon: number) => {
+    try {
+     return await getMapReportsRepo(db, minLat, maxLat, minLon, maxLon)
+    } catch(error) {
+        console.error('Erro ao realizar a query de busca de mapReports na boundingBox do usuario', error);
+        throw new Error('ERR_GET_REPORTS_FAILED')
+    }
+} 

@@ -559,51 +559,43 @@ paths:
                         type: string
                         example: Falha ao criar map report
 
-  /poiEvaluations:
-    post:
-      summary: 'Envia avaliação e mini questionário de um POI'
-      description: >
-        Registra o feedback de acessibilidade de um usuário para um POI específico. Nenhuma validação rigorosa de campos exigida no contrato.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                poiId:
-                  type: string
-                  nullable: true
-                  description: 'ID do Ponto de Interesse avaliado.'
-                  example: 'poi_001'
-                userId:
-                  type: string
-                  nullable: true
-                  description: 'ID do usuário respondente.'
-                  example: 'usr_002'
-                isPcd:
-                  type: boolean
-                  nullable: true
-                  description: 'Filtro inicial: O usuário é PCD? Se falso, as perguntas abaixo podem ser ignoradas pelo frontend.'
-                  example: true
-                hadDifficulty:
-                  type: boolean
-                  nullable: true
-                  description: '1) Você teve dificuldade com esse ponto de interesse?'
-                  example: false
-                mobilityAid:
-                  type: string
-                  nullable: true
-                  enum: [wheelchair, walker, cane, other]
-                  description: '2) Qual sua dificuldade de locomoção? (Cadeira, Andador, Bengala, Outros)'
-                  example: 'wheelchair'
-                description:
-                  type: string
-                  nullable: true
-                  description: '3) Descreva em poucas palavras sua dificuldade.'
-                  example: 'A rampa é muito íngreme.'
+    get:
+      summary: Recupera os relatos no mapa (Bounding Box)
+      description: Retorna uma lista de relatos de acessibilidade filtrada pelas coordenadas da tela atual do usuário (Bounding Box). A query é limitada a um máximo de 40 registros por requisição.
+      tags:
+        - Map Reports
+      parameters:
+        - in: query
+          name: minLat
+          required: true
+          schema:
+            type: number
+            format: float
+          description: Latitude da borda inferior (Sul) da tela.
+        - in: query
+          name: maxLat
+          required: true
+          schema:
+            type: number
+            format: float
+          description: Latitude da borda superior (Norte) da tela.
+        - in: query
+          name: minLon
+          required: true
+          schema:
+            type: number
+            format: float
+          description: Longitude da borda esquerda (Oeste) da tela.
+        - in: query
+          name: maxLon
+          required: true
+          schema:
+            type: number
+            format: float
+          description: Longitude da borda direita (Leste) da tela.
       responses:
-        '201':
-          description: 'Avaliação salva com sucesso.'
+        '200':
+          description: Busca realizada com sucesso.
           content:
             application/json:
               schema:
@@ -612,13 +604,96 @@ paths:
                   success:
                     type: boolean
                     example: true
-        '500':
-          description: 'Erro interno (ex: chave estrangeira inválida).'
+                  data:
+                    type: array
+                    description: Lista com os dados completos dos relatos encontrados na área solicitada.
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        userId:
+                          type: string
+                          nullable: true
+                        poiId:
+                          type: string
+                          nullable: true
+                        reportType:
+                          type: string
+                          enum: 
+                            - blocked_crosswalk
+                            - pothole
+                            - broken_elevator
+                            - fallen_tree
+                            - inaccessible_entrance
+                            - irregular_surface
+                            - sidewalk_surface
+                            - other
+                        geomType:
+                          type: string
+                          enum: [point, line]
+                        lat:
+                          type: number
+                          format: float
+                        lon:
+                          type: number
+                          format: float
+                        geometryJson:
+                          type: string
+                          nullable: true
+                        imageUrl:
+                          type: string
+                          nullable: true
+                        detailsJson:
+                          type: string
+                          nullable: true
+                        status:
+                          type: string
+                          enum: [active, resolved, pending_moderation]
+                        rejectionsCount:
+                          type: integer
+                        createdAt:
+                          type: string
+                          format: date-time
+        '400':
+          description: Parâmetros da Bounding Box ausentes ou inválidos.
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  success:
+                    type: boolean
+                    example: false
                   error:
-                    type: string
-                    example: 'ERR_CREATE_EVALUATION_FAILED'
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: ERR_MISSING_BBOX
+                      message:
+                        type: string
+                        example: "As coordenadas da Bounding Box (minLat, maxLat, minLon, maxLon) são obrigatórias."
+        '500':
+          description: Erro interno ao realizar a consulta no banco de dados ou erro não mapeado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - ERR_GET_REPORTS_FAILED
+                          - ERR_UNKNOWN
+                          - ERR_INTERNAL
+                      message:
+                        type: string
+                        example: "Falha na recuperação dos map reports"
+ 

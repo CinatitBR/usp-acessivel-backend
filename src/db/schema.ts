@@ -90,17 +90,17 @@ export const mapReports = sqliteTable('map_reports', {
       'fallen_tree',
       'inaccessible_entrance',
       'irregular_surface',
-      'sidewalk_surface',
+      'sidewalk_surface', // imagem do piso
       'other',
     ],
   }),
-  geomType: text('geom_type', { enum: ['point', 'line'] }),
+  geomType: text('geom_type', { enum: ['point', 'line'] }), // caso a pessoa marque até onde vai o piso que ela está reportando o geom_type é line
   lat: real('lat').notNull(),
   lon: real('lon').notNull(),
-  geometryJson: text('geometry_json'),
+  geometryJson: text('geometry_json'), // caso a pessoa envie um popup que representa algo que nao seja somente um ponto
   imageUrl: text('image_url'),
   detailsJson: text('details_json'), // {descr: descrição do problema}
-  status: text('status', { enum: ['active', 'resolved', 'pending_moderation'] }).default('active'),
+  status: text('status', { enum: ['active', 'resolved', 'pending_moderation'] }).default('active'), // default active pois no momento nao temos o sistema de moderação
   rejectionsCount: integer('rejections_count').default(0),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 });
