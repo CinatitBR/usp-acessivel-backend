@@ -30,6 +30,7 @@ export const pois = sqliteTable('pois', {
   lat: real('lat').notNull(),
   lon: real('lon').notNull(),
   detailsJson: text('details_json'),
+  imageUrl: text('image_url'),
     //String contendo um objeto JSON com os detalhes específicos variando de acordo com a categoria:
   // - **elevator**: `{"floors": ["T", "1", "2"], "cabin dimensions": "1.20m x 1.50m"}`
   // - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`

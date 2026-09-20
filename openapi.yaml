@@ -305,11 +305,11 @@ paths:
   /pois:
     post:
       summary: Cadastra um novo Ponto de Interesse (POI)
-      description: Cria um novo registro de POI e o vincula opcionalmente a um prédio existente.
+      description: Cria um novo registo de POI e vincula-o opcionalmente a um prédio existente. Suporta o envio de fotografia associada (JPEG/WEBP) via multipart/form-data.
       requestBody:
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               required:
@@ -317,7 +317,6 @@ paths:
                 - name
                 - lat
                 - lon
-                - detailsJson
               properties:
                 buildingId:
                   type: string
@@ -340,9 +339,11 @@ paths:
                   description: Longitude da coordenada geográfica.
                 createdBy:
                   type: string
-                  description: ID do usuário (UUID) responsável pela criação do registro.
+                  nullable: true
+                  description: ID do utilizador (UUID) responsável pela criação do registo.
                 detailsJson:
                   type: string
+                  nullable: true
                   description: |
                     String formatada contendo um objeto JSON válido. As propriedades variam estritamente conforme a `category` escolhida:
                     
@@ -350,6 +351,10 @@ paths:
                     - **bathroom**: `{"is_unisex": true, "has_grab_bars": true, "is_pcd_exclusive": false}`
                     - **ramp**: `{"has_handrail": true, "steepness": "moderate"}`
                     - **bus**: `{"is_curb_adequate": true}`
+                image:
+                  type: string
+                  format: binary
+                  description: Fotografia comprovativa do ponto de interesse. Apenas os formatos JPEG ou WEBP são aceites.
       responses:
         '201':
           description: POI criado com sucesso.
@@ -363,9 +368,28 @@ paths:
                     example: true
                   data:
                     type: object
-                    description: Retorna o objeto completo inserido no banco, incluindo ID (UUID) e status default ('active').
+                    description: Retorna o objeto completo inserido na base de dados, incluindo ID (UUID), imageUrl gerado no R2 e status default ('active').
+        '400':
+          description: Erro de validação no upload (ex. formato de ficheiro não suportado).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: ERR_INVALID_FILE_TYPE
+                      message:
+                        type: string
+                        example: "Formato de imagem não permitido. Use JPEG ou WEBP."
         '500':
-          description: Erro interno no servidor ou falha na inserção no banco de dados (D1).
+          description: Erro interno no servidor ou falha na inserção na base de dados (D1).
           content:
             application/json:
               schema:

@@ -8,8 +8,9 @@ export interface PostPoiRequest {
     name: string;
     lat: number;
     lon: number;
-    detailsJson: string;
-    createdBy: string;
+    detailsJson: string | null;
+    createdBy: string | null;
+    image?: File | null; 
 }
 
 export type InsertPoi = typeof pois.$inferInsert
