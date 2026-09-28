@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { postMapReportService } from '../services/mapReports';
+import { postMapReportService, getMapReportsService } from '../services/mapReports';
 import { postMapReportRequest } from '../models/mapReports';
 
 type ReportTypeEnum =
@@ -114,5 +114,67 @@ mapReportsRoutes.post('/', async (c) => {
     );
   }
 });
+
+mapReportsRoutes.get('/', async(c) => {
+  const {minLat, maxLat, minLon, maxLon} = c.req.query();
+
+  if(!minLat || !maxLat || !minLon || !maxLon) {
+    return c.json({
+      success: false,
+      error: {
+        code: 'ERR_MISSING_BBOX',
+        message: 'As coordenadas da Bounding Box (minLat, maxLat, minLon, maxLon) são obrigatórias.'
+      }
+    }, 400);
+  }
+
+  const minLatNum = Number(minLat);
+  const maxLatNum = Number(maxLat);
+  const minLonNum = Number(minLon);
+  const maxLonNum = Number(maxLon);
+
+  try {
+
+    const mapReportsPayload = await getMapReportsService(c.env.DB, minLatNum, maxLatNum, minLonNum, maxLonNum);
+    return c.json ({
+      success: true,
+      data: mapReportsPayload
+
+    }, 200);
+
+  } catch(error) {
+    if (error instanceof Error) {
+      if (error.message.startsWith('ERR_')) {
+        return c.json({
+          success: false,
+          error: {
+            code: error.message,
+            message: "Falha na recuperação dos map reports"
+          }
+        }, 500)
+      }
+
+      return c.json({
+        success: false,
+        error: {
+          code: 'ERR_UNKNOWN',
+          message: error.message
+        }
+      }, 500)
+    }
+  }
+
+  // Retorno de segurança caso o erro não seja instância de Error
+  return c.json({
+      success: false,
+      error: {
+        code: 'ERR_INTERNAL',
+        message: 'Erro interno inesperado'
+      }
+    }, 500);
+  
+
+
+})
 
 export default mapReportsRoutes;

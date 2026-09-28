@@ -1,0 +1,1 @@
+ALTER TABLE `pois` ADD `image_url` text;

@@ -51,3 +51,22 @@ INSERT OR IGNORE INTO visual_route_steps (id, visual_route_id, step_order, descr
   ('step_ime_1_1', 'rota_ime_1', 1, 'Passe pela catraca da portaria principal', 'https://via.placeholder.com/300x200?text=Passo+1', -23.557434, -46.731765),
   ('step_ime_1_2', 'rota_ime_1', 2, 'Siga reto pelo corredor principal por 10 metros', 'https://via.placeholder.com/300x200?text=Passo+2', -23.557434, -46.731765),
   ('step_ime_1_3', 'rota_ime_1', 3, 'O elevador estará à sua esquerda antes da escada', 'https://via.placeholder.com/300x200?text=Passo+3', -23.557434, -46.731765);
+
+
+  -- 4. Inserindo Relatos no Mapa (Map Reports) para testar a Bounding Box e Filtros
+INSERT OR IGNORE INTO map_reports (id, user_id, poi_id, report_type, geom_type, lat, lon, geometry_json, image_url, details_json, status, rejections_count, created_at) VALUES 
+  
+  -- [DEVE APARECER] Relato 1: Problema num Elevador (Vinculado ao POI do IME)
+  ('rep_seed_1', null, 'poi_ime_1', 'broken_elevator', 'point', -23.557434, -46.731765, null, null, '{"descricao": "Elevador parou no segundo andar e as portas não abrem."}', 'active', 0, CURRENT_TIMESTAMP),
+
+  -- [DEVE APARECER] Relato 2: Buraco na via perto do IME (Ponto Isolado com Imagem)
+  ('rep_seed_2', null, null, 'pothole', 'point', -23.558000, -46.732000, null, 'rep_seed_2_fake.jpg', '{"descricao": "Buraco fundo logo na descida da calçada."}', 'active', 1, CURRENT_TIMESTAMP),
+
+  -- [DEVE APARECER] Relato 3: Piso tátil quebrado perto da FEA (Tipo Linha com Geometry JSON)
+  ('rep_seed_3', null, null, 'sidewalk_surface', 'line', -23.558611, -46.728889, '{"type": "LineString", "coordinates": [[-46.728889, -23.558611], [-46.728900, -23.558700]]}', null, '{"descricao": "Piso tátil solto em todo este trajeto."}', 'active', 0, CURRENT_TIMESTAMP),
+
+  -- [NÃO DEVE APARECER] Relato 4: Teste de Filtro de Rejeições (Tem 3 rejeições, o limite é 2)
+  ('rep_seed_4', null, null, 'blocked_crosswalk', 'point', -23.560000, -46.730000, null, null, '{"descricao": "Carro estacionado na faixa (falso alarme)."}', 'active', 3, CURRENT_TIMESTAMP),
+
+  -- [NÃO DEVE APARECER] Relato 5: Teste de Filtro de Status (Status está 'resolved')
+  ('rep_seed_5', null, null, 'fallen_tree', 'point', -23.555000, -46.735000, null, null, '{"descricao": "Árvore caída na via (Já resolvido)."}', 'resolved', 0, CURRENT_TIMESTAMP);

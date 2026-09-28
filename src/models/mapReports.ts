@@ -13,3 +13,4 @@ export interface postMapReportRequest {
     detailsJson: string | null,
     image?: File | null
 }
+
