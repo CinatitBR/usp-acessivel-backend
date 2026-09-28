@@ -424,7 +424,6 @@ paths:
               type: object
               required:
                 - reportType
-                - geomType
                 - lat
                 - lon
               properties:
@@ -436,24 +435,29 @@ paths:
                   type: string
                   description: ID do Ponto de Interesse associado ao relato (opcional).
                   nullable: true
+                buildingId:
+                  type: string
+                  description: ID do prédio associado ao relato. Recomendado para tipos como inaccessible_floor, broken_elevator e inaccessible_bathroom.
+                  nullable: true
                 reportType:
                   type: string
                   description: Categoria do problema relatado.
                   enum:
-                    - blocked_crosswalk
                     - pothole
-                    - broken_elevator
-                    - fallen_tree
-                    - inaccessible_entrance
                     - irregular_surface
-                    - sidewalk_surface
+                    - narrow_sidewalk
+                    - inaccessible_entrance
+                    - inaccessible_floor
+                    - broken_elevator
+                    - inaccessible_bathroom
                     - other
-                geomType:
+                severity:
                   type: string
-                  description: Tipo de geometria espacial do problema, para permitir a implementação da funcionalidade do usuário enviar a imagem de um piso e dizer até onde ele vai.
+                  description: Severidade do problema. Aplicável somente para imperfeições na via (pothole, irregular_surface, narrow_sidewalk).
+                  nullable: true
                   enum:
-                    - point
-                    - line
+                    - moderate
+                    - severe
                 lat:
                   type: number
                   format: float
@@ -464,14 +468,15 @@ paths:
                   format: float
                   description: Longitude da ocorrência.
                   example: -46.730303
-                geometryJson:
-                  type: string
-                  description: Objeto JSON em formato string com detalhes espaciais complexos (ex. coordenadas da linha).
-                  nullable: true
                 detailsJson:
                   type: string
                   description: Objeto JSON em formato string com detalhes textuais adicionais do relato.
                   nullable: true
+                description:
+                  type: string
+                  description: Descrição textual livre do problema, permitindo ao usuário detalhar a situação.
+                  nullable: true
+                  example: "Superfície muito irregular com raízes de árvore expostas, dificultando passagem com cadeira de rodas."
                 image:
                   type: string
                   format: binary
@@ -500,18 +505,22 @@ paths:
                       poiId:
                         type: string
                         nullable: true
+                      buildingId:
+                        type: string
+                        nullable: true
                       reportType:
                         type: string
-                      geomType:
+                      severity:
                         type: string
+                        nullable: true
                       lat:
                         type: number
                       lon:
                         type: number
-                      geometryJson:
+                      detailsJson:
                         type: string
                         nullable: true
-                      detailsJson:
+                      description:
                         type: string
                         nullable: true
                       imageUrl:
@@ -618,33 +627,39 @@ paths:
                         poiId:
                           type: string
                           nullable: true
+                        buildingId:
+                          type: string
+                          nullable: true
                         reportType:
                           type: string
                           enum: 
-                            - blocked_crosswalk
                             - pothole
-                            - broken_elevator
-                            - fallen_tree
-                            - inaccessible_entrance
                             - irregular_surface
-                            - sidewalk_surface
+                            - narrow_sidewalk
+                            - inaccessible_entrance
+                            - inaccessible_floor
+                            - broken_elevator
+                            - inaccessible_bathroom
                             - other
-                        geomType:
+                        severity:
                           type: string
-                          enum: [point, line]
+                          nullable: true
+                          enum:
+                            - moderate
+                            - severe
                         lat:
                           type: number
                           format: float
                         lon:
                           type: number
                           format: float
-                        geometryJson:
-                          type: string
-                          nullable: true
                         imageUrl:
                           type: string
                           nullable: true
                         detailsJson:
+                          type: string
+                          nullable: true
+                        description:
                           type: string
                           nullable: true
                         status:

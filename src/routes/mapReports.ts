@@ -3,15 +3,16 @@ import { postMapReportService, getMapReportsService } from '../services/mapRepor
 import { postMapReportRequest } from '../models/mapReports';
 
 type ReportTypeEnum =
-  | 'blocked_crosswalk'
   | 'pothole'
-  | 'broken_elevator'
-  | 'fallen_tree'
-  | 'inaccessible_entrance'
   | 'irregular_surface'
-  | 'sidewalk_surface'
+  | 'narrow_sidewalk'
+  | 'inaccessible_entrance'
+  | 'inaccessible_floor'
+  | 'broken_elevator'
+  | 'inaccessible_bathroom'
   | 'other';
-type GeomTypeEnum = 'point' | 'line';
+
+type SeverityEnum = 'moderate' | 'severe';
 
 type Bindings = {
   DB: D1Database;
@@ -28,10 +29,11 @@ mapReportsRoutes.post('/', async (c) => {
   // Extraindo os dados do formData
   const userId = request.get('userId') as string | null;
   const poiId = request.get('poiId') as string | null;
+  const buildingId = request.get('buildingId') as string | null;
   const reportType = request.get('reportType') as ReportTypeEnum;
-  const geomType = request.get('geomType') as GeomTypeEnum;
-  const geometryJson = request.get('geometryJson') as string | null;
+  const severity = request.get('severity') as SeverityEnum | null;
   const detailsJson = request.get('detailsJson') as string | null;
+  const description = request.get('description') as string | null;
 
   const latString = request.get('lat');
   const lonString = request.get('lon');
@@ -57,12 +59,13 @@ mapReportsRoutes.post('/', async (c) => {
   const requestPayload: postMapReportRequest = {
     userId,
     poiId,
+    buildingId,
     reportType,
-    geomType,
+    severity,
     lat,
     lon,
-    geometryJson,
     detailsJson,
+    description,
     image,
   };
 
@@ -173,7 +176,6 @@ mapReportsRoutes.get('/', async(c) => {
       }
     }, 500);
   
-
 
 })
 

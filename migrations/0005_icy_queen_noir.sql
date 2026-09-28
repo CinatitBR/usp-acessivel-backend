@@ -1,0 +1,1 @@
+ALTER TABLE `map_reports` ADD `description` text;

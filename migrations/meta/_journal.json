@@ -29,6 +29,20 @@
       "when": 1789833144390,
       "tag": "0003_melted_sir_ram",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790635436274,
+      "tag": "0004_fearless_purifiers",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1790637194926,
+      "tag": "0005_icy_queen_noir",
+      "breakpoints": true
     }
   ]
 }
